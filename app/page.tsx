@@ -7,7 +7,8 @@ const PALETTE = {
   sandBorder: '#5c7564', 
   darkBanner: 'linear-gradient(160deg, #102d22 0%, #081a14 100%)',
   deepBg: '#1a2e26', 
-  textLight: '#f3f4f6'
+  textLight: '#f3f4f6',
+  accent: '#00BB7E'
 };
 
 const ClassroomPortalPage: React.FC = () => {
@@ -18,21 +19,31 @@ const ClassroomPortalPage: React.FC = () => {
       minHeight: '100vh',
       overflowX: 'hidden'
     }}>
+      {/* Barra de Navegación con Botón Unificado */}
       <nav style={{ 
-        padding: '1.5rem 10%', 
+        padding: '1.5rem 8%', 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
         position: 'absolute',
         width: '100%',
-        zIndex: 100
+        zIndex: 100,
+        boxSizing: 'border-box'
       }}>
         <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.2rem' }}>
           U.E Ciudad Cuatricentenaria
         </Link>
-        <div style={{ display: 'flex', gap: '30px' }}>
-          <Link href="/" style={{ color: 'white', textDecoration: 'none', fontSize: '1rem', fontWeight: '500' }}>Inicio</Link>
-          <Link href="/#contacto" style={{ color: 'white', textDecoration: 'none', fontSize: '1rem', fontWeight: '500' }}>Contacto</Link>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '35px' }}>
+          <div style={{ display: 'flex', gap: '25px' }}>
+            <Link href="/" style={navLinkStyle}>Inicio</Link>
+            <Link href="/#contacto" style={navLinkStyle}>Contacto</Link>
+          </div>
+
+          {/* Botón Unificado */}
+          <Link href="/inicio" style={unifiedButtonStyle}>
+            Acceso Docente
+          </Link>
         </div>
       </nav>
 
@@ -79,6 +90,7 @@ const ClassroomPortalPage: React.FC = () => {
         </div>
       </header>
 
+      {/* Selector de Aulas */}
       <section style={{ marginTop: '-85px', padding: '0 5%', position: 'relative', zIndex: 20 }}>
         <div style={{
           background: PALETTE.darkBanner,
@@ -92,54 +104,21 @@ const ClassroomPortalPage: React.FC = () => {
           backdropFilter: 'blur(12px)'
         }}>
           {[
-            { 
-              href: "/Classroom/inicial", 
-              label: "Educación Inicial", 
-              sub: "Preescolar y Maternal" 
-            },
-            { 
-              href: "/Classroom/primaria", 
-              label: "Educación Primaria", 
-              sub: "1ero a 6to Grado" 
-            },
-            { 
-              href: "/Classroom/media", 
-              label: "Educación Media", 
-              sub: "Bachillerato" 
-            }
+            { href: "/Classroom/inicial", label: "Educación Inicial", sub: "Preescolar y Maternal" },
+            { href: "/Classroom/primaria", label: "Educación Primaria", sub: "1ero a 6to Grado" },
+            { href: "/Classroom/media", label: "Educación Media", sub: "Bachillerato" }
           ].map((item, i) => (
-            <Link key={i} href={item.href} style={{ textDecoration: 'none', transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }} className="nav-item">
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                color: 'white',
-                textAlign: 'center',
-                padding: '0 20px'
-              }}>
-                <h3 style={{ 
-                  fontSize: '1.4rem', 
-                  fontWeight: '800', 
-                  margin: '0 0 5px 0',
-                  letterSpacing: '-0.5px'
-                }}>
-                  {item.label}
-                </h3>
-                <p style={{ 
-                  fontSize: '0.95rem', 
-                  color: '#9ca3af', 
-                  margin: 0, 
-                  fontWeight: '500',
-                  opacity: 0.9 
-                }}>
-                  {item.sub}
-                </p>
+            <Link key={i} href={item.href} style={{ textDecoration: 'none', transition: '0.3s' }} className="nav-item">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', color: 'white', textAlign: 'center', padding: '0 20px' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: '800', margin: '0 0 5px 0', letterSpacing: '-0.5px' }}>{item.label}</h3>
+                <p style={{ fontSize: '0.95rem', color: '#9ca3af', margin: 0, fontWeight: '500', opacity: 0.9 }}>{item.sub}</p>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
+      {/* Calendario y Footer se mantienen igual */}
       <section style={{ padding: '120px 10% 100px', color: 'white', display: 'flex', justifyContent: 'center' }}>
         <div style={{ maxWidth: '800px', width: '100%' }}>
           <div style={calendarCardStyle}>
@@ -147,7 +126,7 @@ const ClassroomPortalPage: React.FC = () => {
               CALENDARIO ESCOLAR
             </h4>
             <p style={{ fontSize: '1.3rem', opacity: 0.8, lineHeight: '1.6', maxWidth: '600px', margin: '0 auto' }}>
-              Mantente al tanto de eventos, feriados, jornadas pedagógicas y evaluaciones próximas para este año escolar 2026.
+              Mantente al tanto de eventos, feriados y evaluaciones para este año escolar 2026.
             </p>
             <button style={buttonStyle}>Ver Agenda Completa</button>
           </div>
@@ -160,10 +139,33 @@ const ClassroomPortalPage: React.FC = () => {
 
       <style jsx global>{`
         body { margin: 0; padding: 0; }
-        .nav-item:hover { transform: scale(1.1) translateY(-10px); }
+        .nav-item:hover { transform: scale(1.05) translateY(-5px); }
       `}</style>
     </div>
   );
+};
+
+const navLinkStyle: React.CSSProperties = {
+  color: 'white',
+  textDecoration: 'none',
+  fontSize: '0.95rem',
+  fontWeight: '500',
+  opacity: 0.8
+};
+
+const unifiedButtonStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.05)',
+  color: 'white',
+  textDecoration: 'none',
+  fontSize: '0.9rem',
+  fontWeight: '700',
+  padding: '12px 24px',
+  borderRadius: '15px',
+  border: `1px solid ${PALETTE.accent}`,
+  transition: '0.3s',
+  boxShadow: `0 0 15px rgba(0, 187, 126, 0.15)`,
+  textTransform: 'uppercase',
+  letterSpacing: '1px'
 };
 
 const calendarCardStyle: React.CSSProperties = {
@@ -172,7 +174,6 @@ const calendarCardStyle: React.CSSProperties = {
   borderRadius: '50px',
   border: '1px solid rgba(255,255,255,0.08)',
   textAlign: 'center',
-  boxShadow: '0 30px 60px rgba(0,0,0,0.3)',
   backdropFilter: 'blur(5px)'
 };
 
@@ -185,9 +186,7 @@ const buttonStyle: React.CSSProperties = {
   fontWeight: 'bold',
   fontSize: '1.1rem',
   color: '#1a2e26',
-  cursor: 'pointer',
-  boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-  transition: 'transform 0.2s ease'
+  cursor: 'pointer'
 };
 
 export default ClassroomPortalPage;

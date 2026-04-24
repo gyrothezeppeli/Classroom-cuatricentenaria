@@ -1,481 +1,331 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 
-// ============================================
-// 📁 ARCHIVO DE CONFIGURACIÓN FÁCIL DE EDITAR
-// ============================================
-
-// 🎨 COLORES (Puedes cambiarlos aquí)
 const COLORES = {
   principal: '#00BB7E',
-  oscuro: '#083344',
+  oscuro: '#102d22',
   acento: '#064E3B',
-  fondo: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+  sandBorder: 'rgba(92, 117, 100, 0.5)',
+  deepBg: '#1a2e26',
+  textLight: '#f3f4f6'
 };
 
-// 📚 GRADOS DE EDUCACIÓN PRIMARIA (Edita aquí para agregar/quitar grados)
 const GRADOS_PRIMARIA = ['1er grado', '2do grado', '3er grado', '4to grado', '5to grado', '6to grado'];
-
-// 🔤 SECCIONES (Edita aquí)
 const SECCIONES = ['A', 'B', 'C'];
 
-// ============================================
-// 📦 INTERFACES (No necesitas modificar esto)
-// ============================================
-
-interface Tarea {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  fechaEntrega: string;
-  materia: string;
-  completado: boolean;
-}
-
-interface Aviso {
-  id: number;
-  titulo: string;
-  mensaje: string;
-  fecha: string;
-  importante: boolean;
-}
-
-interface Material {
-  id: number;
-  titulo: string;
-  tipo: 'guia' | 'material' | 'recurso';
-  archivo: string;
-  materia: string;
-}
-
-interface GuiaEscolar {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  nivel: string;
-  grado: string;
-  materia: string;
-  pdfUrl: string;
-}
-
-interface PlanEvaluacion {
-  id: number;
-  periodo: string;
-  materia: string;
-  tipoEvaluacion: string;
-  porcentaje: number;
-  fecha: string;
-}
-
-// ============================================
-// 📝 DATOS INICIALES (Edita aquí para cambiar ejemplos)
-// ============================================
-
-const TAREAS_INICIALES: Record<string, Tarea[]> = {
-  '1er grado': [
-    { id: 1, titulo: "Lectura de sílabas", descripcion: "Leer sílabas con la letra M", fechaEntrega: "2026-04-21", materia: "Lengua", completado: false },
-    { id: 2, titulo: "Sumas hasta 10", descripcion: "Resolver sumas simples", fechaEntrega: "2026-04-22", materia: "Matemática", completado: false }
-  ],
-  '2do grado': [
-    { id: 1, titulo: "Comprensión lectora", descripcion: "Leer cuento y responder preguntas", fechaEntrega: "2026-04-23", materia: "Lengua", completado: false },
-    { id: 2, titulo: "Tabla del 2", descripcion: "Aprender la tabla de multiplicar", fechaEntrega: "2026-04-24", materia: "Matemática", completado: false }
-  ],
-  '3er grado': [
-    { id: 1, titulo: "Partes de la planta", descripcion: "Dibujar y nombrar partes", fechaEntrega: "2026-04-23", materia: "Ciencias Naturales", completado: false },
-    { id: 2, titulo: "Multiplicaciones", descripcion: "Ejercicios de multiplicación", fechaEntrega: "2026-04-25", materia: "Matemática", completado: false }
-  ],
-  '4to grado': [
-    { id: 1, titulo: "La división", descripcion: "Resolver divisiones exactas", fechaEntrega: "2026-04-24", materia: "Matemática", completado: false },
-    { id: 2, titulo: "Los estados de Venezuela", descripcion: "Investigar 5 estados", fechaEntrega: "2026-04-26", materia: "Sociales", completado: false }
-  ],
-  '5to grado': [
-    { id: 1, titulo: "Fracciones", descripcion: "Suma de fracciones homogéneas", fechaEntrega: "2026-04-25", materia: "Matemática", completado: false },
-    { id: 2, titulo: "La Independencia", descripcion: "Línea de tiempo", fechaEntrega: "2026-04-27", materia: "Historia", completado: false }
-  ],
-  '6to grado': [
-    { id: 1, titulo: "Ecuaciones simples", descripcion: "Resolver ecuaciones de primer grado", fechaEntrega: "2026-04-26", materia: "Matemática", completado: false },
-    { id: 2, titulo: "El sistema solar", descripcion: "Maqueta del sistema solar", fechaEntrega: "2026-04-30", materia: "Ciencias Naturales", completado: false }
-  ]
-};
-
-const AVISOS_INICIALES: Record<string, any> = {
-  '1er grado': { titulo: "Bienvenida", mensaje: "Inicio del año escolar", importante: true },
-  '2do grado': { titulo: "Materiales", mensaje: "Revisar mochilas", importante: false },
-  '3er grado': { titulo: "Exámenes", mensaje: "Preparación para evaluaciones", importante: true },
-  '4to grado': { titulo: "Proyecto", mensaje: "Inicio del proyecto escolar", importante: false },
-  '5to grado': { titulo: "Orientación", mensaje: "Charlas disponibles", importante: true },
-  '6to grado': { titulo: "Graduación", mensaje: "Preparativos iniciados", importante: true }
-};
-
-const PLAN_EVALUACION_INICIAL: Record<string, PlanEvaluacion[]> = {
-  '1er grado': [
-    { id: 1, periodo: "I Lapso", materia: "Lengua", tipoEvaluacion: "Escrita", porcentaje: 30, fecha: "2026-05-15" }
-  ],
-  '2do grado': [
-    { id: 1, periodo: "I Lapso", materia: "Matemática", tipoEvaluacion: "Escrita", porcentaje: 35, fecha: "2026-05-16" }
-  ],
-  '3er grado': [
-    { id: 1, periodo: "I Lapso", materia: "Ciencias Naturales", tipoEvaluacion: "Práctica", porcentaje: 30, fecha: "2026-05-17" }
-  ],
-  '4to grado': [
-    { id: 1, periodo: "I Lapso", materia: "Sociales", tipoEvaluacion: "Exposición", porcentaje: 40, fecha: "2026-05-19" }
-  ],
-  '5to grado': [
-    { id: 1, periodo: "I Lapso", materia: "Matemática", tipoEvaluacion: "Escrita", porcentaje: 30, fecha: "2026-05-20" }
-  ],
-  '6to grado': [
-    { id: 1, periodo: "I Lapso", materia: "Ciencias Naturales", tipoEvaluacion: "Proyecto", porcentaje: 35, fecha: "2026-05-21" }
-  ]
-};
-
-// ============================================
-// 🎨 ESTILOS (No necesitas modificar esto)
-// ============================================
-
-const LIQUID_GLASS = {
-  container: {
-    background: 'rgba(255, 255, 255, 0.25)',
-    backdropFilter: 'blur(12px) saturate(180%)',
-    borderRadius: '20px',
-    border: '1px solid rgba(255, 255, 255, 0.3)',
-    boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-  },
-  title: {
-    background: `linear-gradient(135deg, ${COLORES.oscuro} 0%, ${COLORES.principal} 100%)`,
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-  }
-};
-
 const getKey = (grado: string, seccion: string): string => `${grado}_${seccion}`;
-
-// ============================================
-// 🧩 COMPONENTE PRINCIPAL
-// ============================================
 
 const ClassroomPage: React.FC = () => {
   const [gradoActual, setGradoActual] = useState<string>('1er grado');
   const [seccionActual, setSeccionActual] = useState<string>('A');
   const [seccionActiva, setSeccionActiva] = useState('tareas');
 
-  // Estados de datos
-  const [tareas, setTareas] = useState<Tarea[]>([]);
-  const [avisos, setAvisos] = useState<Aviso[]>([]);
-  const [materiales, setMateriales] = useState<Material[]>([]);
-  const [guias, setGuias] = useState<GuiaEscolar[]>([]);
-  const [planEvaluacion, setPlanEvaluacion] = useState<PlanEvaluacion[]>([]);
+  const [tareas, setTareas] = useState<any[]>([]);
+  const [avisos, setAvisos] = useState<any[]>([]);
+  const [materiales, setMateriales] = useState<any[]>([]);
+  const [guias, setGuias] = useState<any[]>([]);
+  const [planEvaluacion, setPlanEvaluacion] = useState<any[]>([]);
 
-  // Estados de formularios
   const [nuevaTarea, setNuevaTarea] = useState({ titulo: '', descripcion: '', fechaEntrega: '', materia: '' });
   const [nuevoAviso, setNuevoAviso] = useState({ titulo: '', mensaje: '', importante: false });
-  const [nuevoMaterial, setNuevoMaterial] = useState({ titulo: '', tipo: 'material' as const, archivo: '', materia: '' });
-  const [nuevaGuia, setNuevaGuia] = useState({ titulo: '', descripcion: '', materia: '', pdfUrl: '' });
+  const [nuevoMaterial, setNuevoMaterial] = useState({ titulo: '', tipo: 'material', archivo: '', materia: '' });
 
   const currentKey = getKey(gradoActual, seccionActual);
 
-  // Cargar datos
   useEffect(() => {
     const cargarDatos = () => {
-      // Tareas
-      const stored = localStorage.getItem(`tareas_${currentKey}`);
-      if (stored) setTareas(JSON.parse(stored));
-      else setTareas(TAREAS_INICIALES[gradoActual] || []);
-
-      // Avisos
-      const avisosStored = localStorage.getItem(`avisos_${currentKey}`);
-      if (avisosStored) setAvisos(JSON.parse(avisosStored));
-      else if (AVISOS_INICIALES[gradoActual]) {
-        setAvisos([{
-          id: 1,
-          ...AVISOS_INICIALES[gradoActual],
-          mensaje: `${AVISOS_INICIALES[gradoActual].mensaje} - Sección ${seccionActual}`,
-          fecha: new Date().toISOString().split('T')[0]
-        }]);
-      } else setAvisos([]);
-
-      // Materiales
-      const materialesStored = localStorage.getItem(`materiales_${currentKey}`);
-      setMateriales(materialesStored ? JSON.parse(materialesStored) : []);
-
-      // Guías
-      const guiasStored = localStorage.getItem(`guias_${currentKey}`);
-      setGuias(guiasStored ? JSON.parse(guiasStored) : []);
-
-      // Plan de evaluación
-      const planStored = localStorage.getItem(`plan_${currentKey}`);
-      setPlanEvaluacion(planStored ? JSON.parse(planStored) : (PLAN_EVALUACION_INICIAL[gradoActual] || []));
+      const t = localStorage.getItem(`tareas_${currentKey}`);
+      setTareas(t ? JSON.parse(t) : []);
+      const a = localStorage.getItem(`avisos_${currentKey}`);
+      setAvisos(a ? JSON.parse(a) : []);
+      const m = localStorage.getItem(`materiales_${currentKey}`);
+      setMateriales(m ? JSON.parse(m) : []);
+      const g = localStorage.getItem(`guias_${currentKey}`);
+      setGuias(g ? JSON.parse(g) : []);
+      const p = localStorage.getItem(`plan_${currentKey}`);
+      setPlanEvaluacion(p ? JSON.parse(p) : []);
     };
-
     cargarDatos();
   }, [gradoActual, seccionActual, currentKey]);
 
-  // Guardar datos
   useEffect(() => { localStorage.setItem(`tareas_${currentKey}`, JSON.stringify(tareas)); }, [tareas, currentKey]);
   useEffect(() => { localStorage.setItem(`avisos_${currentKey}`, JSON.stringify(avisos)); }, [avisos, currentKey]);
   useEffect(() => { localStorage.setItem(`materiales_${currentKey}`, JSON.stringify(materiales)); }, [materiales, currentKey]);
-  useEffect(() => { localStorage.setItem(`guias_${currentKey}`, JSON.stringify(guias)); }, [guias, currentKey]);
-  useEffect(() => { localStorage.setItem(`plan_${currentKey}`, JSON.stringify(planEvaluacion)); }, [planEvaluacion, currentKey]);
 
-  // CRUD Tareas
   const agregarTarea = () => {
     if (!nuevaTarea.titulo || !nuevaTarea.fechaEntrega) return;
-    setTareas([...tareas, { ...nuevaTarea, id: Date.now(), completado: false, descripcion: nuevaTarea.descripcion || '' }]);
+    setTareas([...tareas, { ...nuevaTarea, id: Date.now(), completado: false }]);
     setNuevaTarea({ titulo: '', descripcion: '', fechaEntrega: '', materia: '' });
   };
 
-  const toggleTarea = (id: number) => {
-    setTareas(tareas.map(t => t.id === id ? { ...t, completado: !t.completado } : t));
-  };
-
-  const eliminarTarea = (id: number) => {
-    if (confirm('¿Eliminar tarea?')) setTareas(tareas.filter(t => t.id !== id));
-  };
-
-  // CRUD Avisos
   const agregarAviso = () => {
     if (!nuevoAviso.titulo || !nuevoAviso.mensaje) return;
-    setAvisos([...avisos, { ...nuevoAviso, id: Date.now(), fecha: new Date().toISOString().split('T')[0] }]);
+    setAvisos([...avisos, { ...nuevoAviso, id: Date.now(), fecha: new Date().toLocaleDateString() }]);
     setNuevoAviso({ titulo: '', mensaje: '', importante: false });
   };
 
-  const eliminarAviso = (id: number) => {
-    if (confirm('¿Eliminar aviso?')) setAvisos(avisos.filter(a => a.id !== id));
-  };
-
-  // CRUD Materiales
-  const agregarMaterial = () => {
-    if (!nuevoMaterial.titulo || !nuevoMaterial.archivo) return;
-    setMateriales([...materiales, { ...nuevoMaterial, id: Date.now() }]);
-    setNuevoMaterial({ titulo: '', tipo: 'material', archivo: '', materia: '' });
-  };
-
-  const eliminarMaterial = (id: number) => {
-    if (confirm('¿Eliminar material?')) setMateriales(materiales.filter(m => m.id !== id));
-  };
-
-  // CRUD Guías
-  const agregarGuia = () => {
-    if (!nuevaGuia.titulo || !nuevaGuia.pdfUrl) return;
-    setGuias([...guias, { ...nuevaGuia, id: Date.now(), descripcion: nuevaGuia.descripcion || '', nivel: 'Primaria', grado: gradoActual }]);
-    setNuevaGuia({ titulo: '', descripcion: '', materia: '', pdfUrl: '' });
-  };
-
-  const eliminarGuia = (id: number) => {
-    if (confirm('¿Eliminar guía?')) setGuias(guias.filter(g => g.id !== id));
+  const eliminarElemento = (id: number, tipo: string) => {
+    if (!confirm('¿Seguro que desea eliminar este registro?')) return;
+    if (tipo === 'tarea') setTareas(tareas.filter(t => t.id !== id));
+    if (tipo === 'aviso') setAvisos(avisos.filter(a => a.id !== id));
+    if (tipo === 'material') setMateriales(materiales.filter(m => m.id !== id));
   };
 
   return (
-    <div style={{ fontFamily: "'Montserrat', sans-serif", background: COLORES.fondo, minHeight: '100vh' }}>
-      {/* Barra de navegación */}
-      <nav style={{ background: `linear-gradient(135deg, ${COLORES.oscuro} 0%, ${COLORES.acento} 100%)`, padding: '1rem 0', position: 'sticky', top: 0, zIndex: 1000 }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <h2 style={{ color: 'white', margin: 0 }}>U.E Ciudad Cuatricentenaria - Educación Primaria</h2>
-            
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <select value={gradoActual} onChange={(e) => setGradoActual(e.target.value)} style={{ padding: '0.5rem 1rem', borderRadius: '25px', border: 'none', background: COLORES.principal, color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-                {GRADOS_PRIMARIA.map(g => <option key={g}>{g}</option>)}
-              </select>
-              
-              <select value={seccionActual} onChange={(e) => setSeccionActual(e.target.value)} style={{ padding: '0.5rem 1rem', borderRadius: '25px', border: 'none', background: COLORES.oscuro, color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-                {SECCIONES.map(s => <option key={s}>Sección {s}</option>)}
-              </select>
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              {['tareas', 'avisos', 'materiales', 'guias', 'plan'].map(sec => (
-                <button key={sec} onClick={() => setSeccionActiva(sec)} style={{ padding: '0.5rem 1rem', borderRadius: '25px', border: 'none', background: seccionActiva === sec ? COLORES.principal : 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
-                  {sec === 'tareas' && 'Tareas'}
-                  {sec === 'avisos' && 'Avisos'}
-                  {sec === 'materiales' && 'Materiales'}
-                  {sec === 'guias' && 'Guías PDF'}
-                  {sec === 'plan' && 'Plan de Evaluación'}
-                </button>
-              ))}
-            </div>
-          </div>
+    <div style={{ 
+      fontFamily: "'Montserrat', sans-serif", 
+      background: COLORES.deepBg, 
+      minHeight: '100vh', 
+      color: 'white',
+      backgroundImage: 'radial-gradient(circle at top right, rgba(0, 187, 126, 0.05), transparent)',
+    }}>
+      
+      <nav style={{ 
+        background: 'rgba(16, 45, 34, 0.8)', 
+        backdropFilter: 'blur(10px)',
+        padding: '1.2rem 5%', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        borderBottom: `1px solid ${COLORES.sandBorder}`,
+        position: 'sticky',
+        top: 0,
+        zIndex: 100
+      }}>
+        <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.1rem', letterSpacing: '1px' }}>
+          U.E CIUDAD CUATRICENTENARIA
+        </Link>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select value={gradoActual} onChange={(e) => setGradoActual(e.target.value)} style={selectStyle}>
+            {GRADOS_PRIMARIA.map(g => <option key={g} value={g}>{g.toUpperCase()}</option>)}
+          </select>
+          <select value={seccionActual} onChange={(e) => setSeccionActual(e.target.value)} style={selectStyle}>
+            {SECCIONES.map(s => <option key={s} value={s}>SECCIÓN {s}</option>)}
+          </select>
         </div>
       </nav>
 
-      {/* Título */}
-      <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-        <h2 style={{ ...LIQUID_GLASS.title, fontSize: '1.8rem', margin: 0 }}>
-          Educación Primaria - {gradoActual} - Sección {seccionActual}
-        </h2>
-      </div>
+      <header style={{ padding: '5rem 10% 3rem', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '4rem', fontWeight: '900', margin: 0, textTransform: 'uppercase', color: COLORES.principal }}>
+          {gradoActual}
+        </h1>
+        <p style={{ fontSize: '1.1rem', opacity: 0.6, letterSpacing: '3px', marginTop: '10px' }}>
+          SECCIÓN {seccionActual} • PRIMARIA
+        </p>
+      </header>
 
-      {/* Contenido principal */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+      <section style={{ padding: '0 10%', marginBottom: '4rem' }}>
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.03)', 
+          backdropFilter: 'blur(5px)',
+          borderRadius: '100px', 
+          padding: '0.6rem', 
+          display: 'flex', 
+          justifyContent: 'center', 
+          gap: '8px', 
+          border: '1px solid rgba(255, 255, 255, 0.1)', 
+          maxWidth: '900px',
+          margin: '0 auto',
+          flexWrap: 'wrap'
+        }}>
+          {['tareas', 'avisos', 'materiales', 'guias', 'plan'].map(sec => (
+            <button key={sec} onClick={() => setSeccionActiva(sec)} style={{ 
+              padding: '0.7rem 1.8rem', 
+              borderRadius: '50px', 
+              border: 'none', 
+              background: seccionActiva === sec ? COLORES.principal : 'transparent',
+              color: seccionActiva === sec ? '#1a2e26' : 'white', 
+              fontWeight: 'bold', 
+              cursor: 'pointer', 
+              transition: '0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+              fontSize: '0.75rem',
+              letterSpacing: '1px'
+            }}>
+              {sec.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem 5rem' }}>
         
-        {/* SECCIÓN TAREAS */}
         {seccionActiva === 'tareas' && (
-          <div>
-            <h2 style={{ ...LIQUID_GLASS.title, textAlign: 'center' }}>Mis Tareas</h2>
-            
-            <div style={{ ...LIQUID_GLASS.container, padding: '1.5rem', marginBottom: '2rem' }}>
-              <h4>Nueva Tarea</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <input type="text" placeholder="Título" value={nuevaTarea.titulo} onChange={(e) => setNuevaTarea({...nuevaTarea, titulo: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Descripción" value={nuevaTarea.descripcion} onChange={(e) => setNuevaTarea({...nuevaTarea, descripcion: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="date" value={nuevaTarea.fechaEntrega} onChange={(e) => setNuevaTarea({...nuevaTarea, fechaEntrega: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Materia" value={nuevaTarea.materia} onChange={(e) => setNuevaTarea({...nuevaTarea, materia: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <button onClick={agregarTarea} style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', border: 'none', borderRadius: '10px', padding: '0.5rem', cursor: 'pointer' }}>Agregar</button>
+          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+            <div style={formCardStyle}>
+              <h3 style={labelStyle}>Nueva Asignación</h3>
+              <div style={gridStyle}>
+                <input type="text" placeholder="TÍTULO" value={nuevaTarea.titulo} onChange={(e) => setNuevaTarea({...nuevaTarea, titulo: e.target.value})} style={inputStyle} />
+                <input type="date" value={nuevaTarea.fechaEntrega} onChange={(e) => setNuevaTarea({...nuevaTarea, fechaEntrega: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="MATERIA" value={nuevaTarea.materia} onChange={(e) => setNuevaTarea({...nuevaTarea, materia: e.target.value})} style={inputStyle} />
+                <button onClick={agregarTarea} style={btnPrincipalStyle}>AÑADIR</button>
               </div>
             </div>
 
             {tareas.map(tarea => (
-              <div key={tarea.id} style={{ ...LIQUID_GLASS.container, padding: '1rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <input type="checkbox" checked={tarea.completado} onChange={() => toggleTarea(tarea.id)} style={{ width: '20px', height: '20px' }} />
+              <div key={tarea.id} style={itemCardStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+                  <input type="checkbox" checked={tarea.completado} onChange={() => {}} style={{ width: '20px', height: '20px', accentColor: COLORES.principal }} />
                   <div>
-                    <h4 style={{ textDecoration: tarea.completado ? 'line-through' : 'none', margin: 0 }}>{tarea.titulo}</h4>
-                    <small>{tarea.descripcion} | {tarea.fechaEntrega} | {tarea.materia}</small>
+                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>{tarea.titulo}</h4>
+                    <p style={{ margin: '5px 0 0', color: COLORES.principal, fontSize: '0.85rem', fontWeight: '600' }}>
+                      {tarea.materia.toUpperCase()} • ENTREGA: {tarea.fechaEntrega}
+                    </p>
                   </div>
                 </div>
-                <button onClick={() => eliminarTarea(tarea.id)} style={{ background: '#dc3545', color: 'white', border: 'none', borderRadius: '10px', padding: '0.25rem 0.75rem', cursor: 'pointer' }}>Eliminar</button>
+                <button onClick={() => eliminarElemento(tarea.id, 'tarea')} style={btnDangerStyle}>ELIMINAR</button>
               </div>
             ))}
-            {tareas.length === 0 && <p style={{ textAlign: 'center' }}>No hay tareas</p>}
           </div>
         )}
 
-        {/* SECCIÓN AVISOS */}
         {seccionActiva === 'avisos' && (
-          <div>
-            <h2 style={{ ...LIQUID_GLASS.title, textAlign: 'center' }}>Avisos</h2>
-            
-            <div style={{ ...LIQUID_GLASS.container, padding: '1.5rem', marginBottom: '2rem' }}>
-              <h4>Nuevo Aviso</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <input type="text" placeholder="Título" value={nuevoAviso.titulo} onChange={(e) => setNuevoAviso({...nuevoAviso, titulo: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Mensaje" value={nuevoAviso.mensaje} onChange={(e) => setNuevoAviso({...nuevoAviso, mensaje: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <label><input type="checkbox" checked={nuevoAviso.importante} onChange={(e) => setNuevoAviso({...nuevoAviso, importante: e.target.checked})} /> Importante</label>
-                <button onClick={agregarAviso} style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', border: 'none', borderRadius: '10px', padding: '0.5rem', cursor: 'pointer' }}>Publicar</button>
+          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+            <div style={formCardStyle}>
+              <h3 style={labelStyle}>Publicar Aviso</h3>
+              <div style={gridStyle}>
+                <input type="text" placeholder="TÍTULO DEL AVISO" value={nuevoAviso.titulo} onChange={(e) => setNuevoAviso({...nuevoAviso, titulo: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="MENSAJE" value={nuevoAviso.mensaje} onChange={(e) => setNuevoAviso({...nuevoAviso, mensaje: e.target.value})} style={inputStyle} />
+                <button onClick={agregarAviso} style={btnPrincipalStyle}>PUBLICAR</button>
               </div>
             </div>
 
             {avisos.map(aviso => (
-              <div key={aviso.id} style={{ ...LIQUID_GLASS.container, padding: '1rem', marginBottom: '1rem', borderLeft: aviso.importante ? `5px solid ${COLORES.principal}` : 'none', position: 'relative' }}>
-                <button onClick={() => eliminarAviso(aviso.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '10px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>X</button>
-                <h4>{aviso.titulo}</h4>
-                <p>{aviso.mensaje}</p>
-                <small>{aviso.fecha}</small>
-                {aviso.importante && <span style={{ marginLeft: '1rem', background: COLORES.principal, padding: '0.2rem 0.5rem', borderRadius: '5px', color: 'white' }}>IMPORTANTE</span>}
+              <div key={aviso.id} style={itemCardStyle}>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>{aviso.titulo}</h4>
+                  <p style={{ margin: '8px 0', opacity: 0.7, lineHeight: '1.5' }}>{aviso.mensaje}</p>
+                  <small style={{ color: COLORES.principal, fontWeight: 'bold' }}>{aviso.fecha}</small>
+                </div>
+                <button onClick={() => eliminarElemento(aviso.id, 'aviso')} style={btnDangerStyle}>ELIMINAR</button>
               </div>
             ))}
           </div>
         )}
 
-        {/* SECCIÓN MATERIALES */}
-        {seccionActiva === 'materiales' && (
-          <div>
-            <h2 style={{ ...LIQUID_GLASS.title, textAlign: 'center' }}>Materiales</h2>
-            
-            <div style={{ ...LIQUID_GLASS.container, padding: '1.5rem', marginBottom: '2rem' }}>
-              <h4>Subir Material</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <input type="text" placeholder="Título" value={nuevoMaterial.titulo} onChange={(e) => setNuevoMaterial({...nuevoMaterial, titulo: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <select value={nuevoMaterial.tipo} onChange={(e) => setNuevoMaterial({...nuevoMaterial, tipo: e.target.value as any})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }}>
-                  <option value="guia">Guía</option>
-                  <option value="material">Material</option>
-                  <option value="recurso">Recurso</option>
-                </select>
-                <input type="text" placeholder="URL del archivo" value={nuevoMaterial.archivo} onChange={(e) => setNuevoMaterial({...nuevoMaterial, archivo: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Materia" value={nuevoMaterial.materia} onChange={(e) => setNuevoMaterial({...nuevoMaterial, materia: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <button onClick={agregarMaterial} style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', border: 'none', borderRadius: '10px', padding: '0.5rem', cursor: 'pointer' }}>Subir</button>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-              {materiales.map(mat => (
-                <div key={mat.id} style={{ ...LIQUID_GLASS.container, padding: '1rem', textAlign: 'center', position: 'relative' }}>
-                  <button onClick={() => eliminarMaterial(mat.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '10px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>X</button>
-                  <div style={{ fontSize: '2rem' }}>{mat.tipo === 'guia' ? '📘' : mat.tipo === 'material' ? '📄' : '🔗'}</div>
-                  <h4>{mat.titulo}</h4>
-                  <p>{mat.materia || 'General'}</p>
-                  <a href={mat.archivo} target="_blank" rel="noopener noreferrer" style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', padding: '0.5rem 1rem', borderRadius: '10px', textDecoration: 'none', display: 'inline-block' }}>Abrir</a>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SECCIÓN GUÍAS PDF */}
-        {seccionActiva === 'guias' && (
-          <div>
-            <h2 style={{ ...LIQUID_GLASS.title, textAlign: 'center' }}>Guías PDF</h2>
-            
-            <div style={{ ...LIQUID_GLASS.container, padding: '1.5rem', marginBottom: '2rem' }}>
-              <h4>Agregar Guía PDF</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                <input type="text" placeholder="Título" value={nuevaGuia.titulo} onChange={(e) => setNuevaGuia({...nuevaGuia, titulo: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Descripción" value={nuevaGuia.descripcion} onChange={(e) => setNuevaGuia({...nuevaGuia, descripcion: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="Materia" value={nuevaGuia.materia} onChange={(e) => setNuevaGuia({...nuevaGuia, materia: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <input type="text" placeholder="URL del PDF" value={nuevaGuia.pdfUrl} onChange={(e) => setNuevaGuia({...nuevaGuia, pdfUrl: e.target.value})} style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid #ddd' }} />
-                <button onClick={agregarGuia} style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', border: 'none', borderRadius: '10px', padding: '0.5rem', cursor: 'pointer' }}>Agregar</button>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem' }}>
-              {guias.map(guia => (
-                <div key={guia.id} style={{ ...LIQUID_GLASS.container, padding: '1.2rem', position: 'relative' }}>
-                  <button onClick={() => eliminarGuia(guia.id)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', background: '#dc3545', color: 'white', border: 'none', borderRadius: '10px', padding: '0.25rem 0.5rem', cursor: 'pointer' }}>X</button>
-                  <div style={{ fontSize: '3rem', textAlign: 'center' }}>📄</div>
-                  <h4 style={{ textAlign: 'center' }}>{guia.titulo}</h4>
-                  <p style={{ textAlign: 'center' }}>{guia.descripcion}</p>
-                  <p><strong>Materia:</strong> {guia.materia}</p>
-                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginTop: '1rem' }}>
-                    <a href={guia.pdfUrl} target="_blank" rel="noopener noreferrer" style={{ background: `linear-gradient(135deg, ${COLORES.principal} 0%, ${COLORES.acento} 100%)`, color: 'white', padding: '0.5rem 1rem', borderRadius: '10px', textDecoration: 'none' }}>Ver</a>
-                    <a href={guia.pdfUrl} download style={{ background: '#28a745', color: 'white', padding: '0.5rem 1rem', borderRadius: '10px', textDecoration: 'none' }}>Descargar</a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* SECCIÓN PLAN DE EVALUACIÓN */}
         {seccionActiva === 'plan' && (
-          <div>
-            <h2 style={{ ...LIQUID_GLASS.title, textAlign: 'center' }}>Plan de Evaluación</h2>
-            
-            <div style={{ ...LIQUID_GLASS.container, overflowX: 'auto', padding: '1rem' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: `linear-gradient(135deg, ${COLORES.oscuro} 0%, ${COLORES.acento} 100%)`, color: 'white' }}>
-                    <th style={{ padding: '0.75rem' }}>Periodo</th>
-                    <th style={{ padding: '0.75rem' }}>Materia</th>
-                    <th style={{ padding: '0.75rem' }}>Tipo</th>
-                    <th style={{ padding: '0.75rem' }}>Porcentaje</th>
-                    <th style={{ padding: '0.75rem' }}>Fecha</th>
+          <div style={{...formCardStyle, overflowX: 'auto'}}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ textAlign: 'left', fontSize: '0.7rem', opacity: 0.5, letterSpacing: '2px' }}>
+                  <th style={{ padding: '15px' }}>MATERIA</th>
+                  <th style={{ padding: '15px' }}>EVALUACIÓN</th>
+                  <th style={{ padding: '15px' }}>%</th>
+                  <th style={{ padding: '15px' }}>FECHA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {planEvaluacion.map(e => (
+                  <tr key={e.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    <td style={{ padding: '15px', fontWeight: 'bold' }}>{e.materia}</td>
+                    <td style={{ padding: '15px', opacity: 0.8 }}>{e.tipoEvaluacion}</td>
+                    <td style={{ padding: '15px', color: COLORES.principal, fontWeight: '900' }}>{e.porcentaje}%</td>
+                    <td style={{ padding: '15px' }}>{e.fecha}</td>
                   </tr>
-                </thead>
-                <tbody>
-                  {planEvaluacion.map(e => (
-                    <tr key={e.id} style={{ borderBottom: '1px solid #ddd' }}>
-                      <td style={{ padding: '0.75rem' }}>{e.periodo}</td>
-                      <td>{e.materia}</td>
-                      <td>{e.tipoEvaluacion}</td>
-                      <td style={{ textAlign: 'center', fontWeight: 'bold', color: COLORES.principal }}>{e.porcentaje}%</td>
-                      <td>{e.fecha}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
-      </div>
 
-      {/* Footer */}
-      <footer style={{ background: '#f8f9fa', borderTop: `1px solid ${COLORES.principal}`, marginTop: '2rem', padding: '1.5rem', textAlign: 'center' }}>
-        <span style={{ background: `linear-gradient(135deg, ${COLORES.oscuro} 0%, ${COLORES.principal} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 'bold' }}>
-          U.E Ciudad Cuatricentenaria - Educación Primaria
-        </span>
+      </main>
+
+      <footer style={{ textAlign: 'center', padding: '4rem', opacity: 0.3, fontSize: '0.8rem', letterSpacing: '2px' }}>
+        © 2026 U.E CIUDAD CUATRICENTENARIA
       </footer>
+
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        select option { background: #102d22; color: white; }
+      `}</style>
     </div>
   );
+};
+
+const selectStyle: React.CSSProperties = {
+  padding: '0.5rem 1rem',
+  borderRadius: '50px',
+  background: 'rgba(0, 0, 0, 0.3)',
+  color: 'white',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  fontWeight: 'bold',
+  fontSize: '0.7rem',
+  cursor: 'pointer',
+  outline: 'none'
+};
+
+const inputStyle: React.CSSProperties = {
+  padding: '1.2rem',
+  borderRadius: '15px',
+  border: '1px solid rgba(255, 255, 255, 0.05)',
+  background: 'rgba(0,0,0,0.2)',
+  color: 'white',
+  fontSize: '0.85rem',
+  outline: 'none',
+  fontWeight: '600'
+};
+
+const labelStyle: React.CSSProperties = {
+  marginTop: 0, 
+  fontSize: '0.75rem', 
+  opacity: 0.5, 
+  textTransform: 'uppercase', 
+  letterSpacing: '2px'
+};
+
+const formCardStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.02)',
+  backdropFilter: 'blur(15px)',
+  padding: '2.5rem',
+  borderRadius: '40px',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  marginBottom: '2rem',
+  boxShadow: '0 20px 50px rgba(0,0,0,0.2)'
+};
+
+const itemCardStyle: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.03)',
+  padding: '1.8rem 2.5rem',
+  borderRadius: '30px',
+  border: '1px solid rgba(255, 255, 255, 0.05)',
+  marginBottom: '1rem',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+};
+
+const btnPrincipalStyle: React.CSSProperties = {
+  background: COLORES.principal,
+  color: '#1a2e26',
+  border: 'none',
+  borderRadius: '15px',
+  fontWeight: '900',
+  cursor: 'pointer',
+  padding: '1.2rem',
+  fontSize: '0.75rem',
+  letterSpacing: '1px'
+};
+
+const btnDangerStyle: React.CSSProperties = {
+  background: 'transparent',
+  color: '#ff4d4d',
+  border: '1px solid rgba(255, 77, 77, 0.2)',
+  borderRadius: '50px',
+  padding: '0.6rem 1.2rem',
+  fontSize: '0.65rem',
+  fontWeight: 'bold',
+  cursor: 'pointer'
+};
+
+const gridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  gap: '12px',
+  marginTop: '1.5rem'
 };
 
 export default ClassroomPage;
