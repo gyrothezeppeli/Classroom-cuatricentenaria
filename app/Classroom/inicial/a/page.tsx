@@ -14,13 +14,12 @@ const COLORES = {
 };
 
 const NIVELES_INICIAL = ['Preescolar'];
-const SECCIONES = ['A', 'B', 'C'];
+const SECCION_FIJA = 'A';
 
-const getKey = (nivel: string, seccion: string): string => `${nivel}_${seccion}`;
+const getKey = (nivel: string): string => `${nivel}_${SECCION_FIJA}`;
 
 const ClassroomPage: React.FC = () => {
   const [nivelActual, setNivelActual] = useState<string>('Preescolar');
-  const [seccionActual, setSeccionActual] = useState<string>('A');
   const [seccionActiva, setSeccionActiva] = useState('tareas');
 
   const [tareas, setTareas] = useState<any[]>([]);
@@ -35,7 +34,7 @@ const ClassroomPage: React.FC = () => {
   const [nuevaGuia, setNuevaGuia] = useState({ titulo: '', descripcion: '', archivo: '' });
   const [nuevoPlan, setNuevoPlan] = useState({ periodo: '', contenido: '', fecha: '' });
 
-  const currentKey = getKey(nivelActual, seccionActual);
+  const currentKey = getKey(nivelActual);
 
   useEffect(() => {
     const cargarDatos = () => {
@@ -55,7 +54,7 @@ const ClassroomPage: React.FC = () => {
       setPlanEvaluacion(planStored ? JSON.parse(planStored) : []);
     };
     cargarDatos();
-  }, [nivelActual, seccionActual, currentKey]);
+  }, [nivelActual, currentKey]);
 
   useEffect(() => { localStorage.setItem(`tareas_${currentKey}`, JSON.stringify(tareas)); }, [tareas, currentKey]);
   useEffect(() => { localStorage.setItem(`avisos_${currentKey}`, JSON.stringify(avisos)); }, [avisos, currentKey]);
@@ -117,9 +116,9 @@ const ClassroomPage: React.FC = () => {
           <select value={nivelActual} onChange={(e) => setNivelActual(e.target.value)} style={selectStyle}>
             {NIVELES_INICIAL.map(n => <option key={n} value={n}>{n}</option>)}
           </select>
-          <select value={seccionActual} onChange={(e) => setSeccionActual(e.target.value)} style={selectStyle}>
-            {SECCIONES.map(s => <option key={s} value={s}>Sección {s}</option>)}
-          </select>
+          <div style={seccionBadgeStyle}>
+            Sección {SECCION_FIJA}
+          </div>
         </div>
       </nav>
 
@@ -127,7 +126,7 @@ const ClassroomPage: React.FC = () => {
         <h1 style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '-2px', margin: 0, textTransform: 'uppercase' }}>
           {nivelActual}
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {seccionActual} - Educación Inicial</p>
+        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION_FIJA} - Educación Inicial</p>
       </header>
 
       <section style={{ padding: '0 10%', marginBottom: '3rem' }}>
@@ -280,7 +279,7 @@ const ClassroomPage: React.FC = () => {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '4rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: '#6b7280' }}>
-        U.E Ciudad Cuatricentenaria © 2026
+        U.E Ciudad Cuatricentenaria © 2026 - Sección {SECCION_FIJA}
       </footer>
     </div>
   );
@@ -295,6 +294,15 @@ const selectStyle: React.CSSProperties = {
   fontWeight: 'bold',
   cursor: 'pointer',
   appearance: 'none'
+};
+
+const seccionBadgeStyle: React.CSSProperties = {
+  padding: '0.6rem 1.5rem',
+  borderRadius: '10px',
+  background: COLORES.principal,
+  color: COLORES.oscuro,
+  fontWeight: 'bold',
+  fontSize: '1rem'
 };
 
 const inputStyle: React.CSSProperties = {
