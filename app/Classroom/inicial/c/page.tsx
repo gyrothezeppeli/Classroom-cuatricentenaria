@@ -15,7 +15,7 @@ const COLORES = {
 };
 
 const NIVELES_INICIAL = ['Preescolar'];
-const SECCION_FIJA = 'A';
+const SECCION_FIJA = 'C';
 
 const getKey = (nivel: string): string => `${nivel}_${SECCION_FIJA}`;
 
