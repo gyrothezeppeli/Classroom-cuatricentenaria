@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -45,6 +45,11 @@ const ClassroomPortalPage: React.FC = () => {
   const [tempYear, setTempYear] = useState<string>("");
   const [tempSection, setTempSection] = useState<string>("");
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [hoveredButton, setHoveredButton] = useState<string | null>(null);
+  const [hoveredSection, setHoveredSection] = useState<string | null>(null);
+  
+  // Refs para cada menú
+  const menuRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Determinar si es móvil solo después del montaje
   const isMobile = isMounted ? width < 768 : false;
@@ -91,9 +96,27 @@ const ClassroomPortalPage: React.FC = () => {
     }
   };
 
-  // Cerrar menús al hacer click fuera (solo móvil)
+  // Manejar click fuera del menú para cerrarlo
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
+      if (activeMenu !== null && !isMobile) {
+        // Verificar si el click fue fuera del menú activo
+        const activeMenuElement = menuRefs.current[activeMenu];
+        if (activeMenuElement && !activeMenuElement.contains(e.target as Node)) {
+          setActiveMenu(null);
+          setTempYear("");
+          setTempSection("");
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeMenu, isMobile]);
+
+  // Cerrar menús al hacer click fuera (solo móvil)
+  useEffect(() => {
+    const handleClickOutsideMobile = (e: MouseEvent) => {
       if (isMobile && showMobileMenu) {
         const target = e.target as HTMLElement;
         if (!target.closest('nav')) {
@@ -102,9 +125,22 @@ const ClassroomPortalPage: React.FC = () => {
       }
     };
     
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener('click', handleClickOutsideMobile);
+    return () => document.removeEventListener('click', handleClickOutsideMobile);
   }, [isMobile, showMobileMenu]);
+
+  // Manejar click en un nivel (para desktop y mobile)
+  const handleLevelClick = (index: number) => {
+    if (activeMenu === index) {
+      setActiveMenu(null);
+      setTempYear("");
+      setTempSection("");
+    } else {
+      setActiveMenu(index);
+      setTempYear("");
+      setTempSection("");
+    }
+  };
 
   // Mostrar un loading inicial para evitar hidratación
   if (!isMounted) {
@@ -148,19 +184,26 @@ const ClassroomPortalPage: React.FC = () => {
           background: 'transparent'
         })
       }}>
-        <Link href="/" style={{ 
-          color: 'white', 
-          fontWeight: 'bold', 
-          textDecoration: 'none', 
-          ...(isMobile ? {
-            fontSize: '0.9rem',
-            maxWidth: '60%'
-          } : {
-            fontSize: '1.2rem'
-          })
-        }}>
+        <a 
+          href="https://u-e-cuatricentenaria-pi.vercel.app/" 
+          style={{ 
+            color: 'white', 
+            fontWeight: 'bold', 
+            textDecoration: 'none',
+            transition: 'all 0.3s ease',
+            ...(isMobile ? {
+              fontSize: '0.9rem',
+              maxWidth: '60%'
+            } : {
+              fontSize: '1.2rem'
+            })
+          }}
+          onMouseEnter={() => setHoveredButton('logo')}
+          onMouseLeave={() => setHoveredButton(null)}
+          className={hoveredButton === 'logo' ? 'hover-glow' : ''}
+        >
           U.E Ciudad Cuatricentenaria
-        </Link>
+        </a>
         
         {/* Botón Hamburguesa solo para móviles */}
         {isMobile && (
@@ -178,8 +221,12 @@ const ClassroomPortalPage: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               gap: '5px',
-              zIndex: 1001
+              zIndex: 1001,
+              transition: 'all 0.3s ease'
             }}
+            onMouseEnter={() => setHoveredButton('hamburger')}
+            onMouseLeave={() => setHoveredButton(null)}
+            className={hoveredButton === 'hamburger' ? 'hover-pulse' : ''}
             aria-label="Menú"
           >
             <div style={{
@@ -210,23 +257,56 @@ const ClassroomPortalPage: React.FC = () => {
         {!isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '35px' }}>
             <div style={{ display: 'flex', gap: '25px' }}>
-              <Link href="/" style={{ 
-                color: 'white', 
-                textDecoration: 'none', 
-                fontSize: '0.95rem', 
-                fontWeight: '500', 
-                opacity: 0.8
-              }}>Inicio</Link>
-              <Link href="/#contacto" style={{ 
-                color: 'white', 
-                textDecoration: 'none', 
-                fontSize: '0.95rem', 
-                fontWeight: '500', 
-                opacity: 0.8
-              }}>Contacto</Link>
+              <a 
+                href="https://u-e-cuatricentenaria-pi.vercel.app/" 
+                style={{ 
+                  color: 'white', 
+                  textDecoration: 'none', 
+                  fontSize: '0.95rem', 
+                  fontWeight: '500', 
+                  opacity: 0.8,
+                  transition: 'all 0.3s ease',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  setHoveredButton('inicio');
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredButton(null);
+                  e.currentTarget.style.opacity = '0.8';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                Inicio
+              </a>
+              <a 
+                href="https://u-e-cuatricentenaria-pi.vercel.app/#contacto" 
+                style={{ 
+                  color: 'white', 
+                  textDecoration: 'none', 
+                  fontSize: '0.95rem', 
+                  fontWeight: '500', 
+                  opacity: 0.8,
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => {
+                  setHoveredButton('contacto');
+                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  setHoveredButton(null);
+                  e.currentTarget.style.opacity = '0.8';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
+                Contacto
+              </a>
             </div>
             <Link 
-              href="/inicio" 
+              href="/inicio"
               style={{ 
                 background: 'rgba(255, 255, 255, 0.05)', 
                 color: 'white', 
@@ -236,10 +316,25 @@ const ClassroomPortalPage: React.FC = () => {
                 padding: '12px 24px', 
                 fontSize: '0.9rem',
                 border: `1px solid ${PALETTE.accent}`, 
-                transition: '0.3s', 
+                transition: 'all 0.3s ease', 
                 boxShadow: `0 0 15px rgba(0, 187, 126, 0.15)`, 
                 textTransform: 'uppercase', 
-                letterSpacing: '1px' 
+                letterSpacing: '1px',
+                cursor: 'pointer'
+              }}
+              onMouseEnter={(e) => {
+                setHoveredButton('docente');
+                e.currentTarget.style.background = PALETTE.accent;
+                e.currentTarget.style.color = '#081a14';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 0 25px rgba(0, 187, 126, 0.4)`;
+              }}
+              onMouseLeave={(e) => {
+                setHoveredButton(null);
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = `0 0 15px rgba(0, 187, 126, 0.15)`;
               }}
             >
               Acceso Docente
@@ -262,32 +357,63 @@ const ClassroomPortalPage: React.FC = () => {
             boxShadow: '0 10px 20px rgba(0,0,0,0.3)',
             zIndex: 1000,
             borderBottomLeftRadius: '12px',
-            borderBottomRightRadius: '12px'
+            borderBottomRightRadius: '12px',
+            animation: 'slideDown 0.3s ease-out'
           }}>
-            <Link href="/" style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '1rem', 
-              fontWeight: '500', 
-              opacity: 0.8,
-              padding: '12px',
-              textAlign: 'center',
-              borderRadius: '10px',
-              background: 'rgba(255,255,255,0.05)'
-            }} onClick={() => setShowMobileMenu(false)}>Inicio</Link>
-            <Link href="/#contacto" style={{ 
-              color: 'white', 
-              textDecoration: 'none', 
-              fontSize: '1rem', 
-              fontWeight: '500', 
-              opacity: 0.8,
-              padding: '12px',
-              textAlign: 'center',
-              borderRadius: '10px',
-              background: 'rgba(255,255,255,0.05)'
-            }} onClick={() => setShowMobileMenu(false)}>Contacto</Link>
+            <a 
+              href="https://u-e-cuatricentenaria-pi.vercel.app/" 
+              style={{ 
+                color: 'white', 
+                textDecoration: 'none', 
+                fontSize: '1rem', 
+                fontWeight: '500', 
+                opacity: 0.8,
+                padding: '12px',
+                textAlign: 'center',
+                borderRadius: '10px',
+                background: 'rgba(255,255,255,0.05)',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={() => setShowMobileMenu(false)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.transform = 'translateX(5px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              Inicio
+            </a>
+            <a 
+              href="https://u-e-cuatricentenaria-pi.vercel.app/#contacto" 
+              style={{ 
+                color: 'white', 
+                textDecoration: 'none', 
+                fontSize: '1rem', 
+                fontWeight: '500', 
+                opacity: 0.8,
+                padding: '12px',
+                textAlign: 'center',
+                borderRadius: '10px',
+                background: 'rgba(255,255,255,0.05)',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={() => setShowMobileMenu(false)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                e.currentTarget.style.transform = 'translateX(5px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                e.currentTarget.style.transform = 'translateX(0)';
+              }}
+            >
+              Contacto
+            </a>
             <Link 
-              href="/inicio" 
+              href="/inicio"
               style={{
                 background: 'rgba(255, 255, 255, 0.05)', 
                 color: 'white', 
@@ -296,9 +422,20 @@ const ClassroomPortalPage: React.FC = () => {
                 borderRadius: '15px', 
                 padding: '12px', 
                 textAlign: 'center',
-                border: `1px solid ${PALETTE.accent}`
+                border: `1px solid ${PALETTE.accent}`,
+                transition: 'all 0.3s ease'
               }}
               onClick={() => setShowMobileMenu(false)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = PALETTE.accent;
+                e.currentTarget.style.color = '#081a14';
+                e.currentTarget.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
             >
               Acceso Docente
             </Link>
@@ -409,6 +546,7 @@ const ClassroomPortalPage: React.FC = () => {
           {levels.map((item, i) => (
             <div 
               key={i} 
+              ref={(el) => { menuRefs.current[i] = el; }}
               style={{ 
                 position: 'relative',
                 ...(isMobile ? {
@@ -419,8 +557,6 @@ const ClassroomPortalPage: React.FC = () => {
                   textAlign: 'center'
                 })
               }}
-              onMouseEnter={() => !isMobile && setActiveMenu(i)}
-              onMouseLeave={() => !isMobile && setActiveMenu(null)}
             >
               <div 
                 style={{
@@ -438,20 +574,30 @@ const ClassroomPortalPage: React.FC = () => {
                     padding: '10px 20px',
                     borderRadius: '20px'
                   }),
-                  ...(activeMenu === i && !isMobile ? { background: 'rgba(255,255,255,0.05)' } : {})
+                  ...(activeMenu === i ? { background: 'rgba(255,255,255,0.05)' } : {})
                 }}
-                onClick={() => {
-                  if (isMobile) {
-                    setActiveMenu(activeMenu === i ? null : i);
+                onClick={() => handleLevelClick(i)}
+                onMouseEnter={(e) => {
+                  if (!isMobile && activeMenu !== i) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.transform = 'translateY(-3px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isMobile && activeMenu !== i) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }
                 }}
               >
                 <h3 style={{
                   margin: '0 0 5px 0',
+                  transition: 'all 0.3s ease',
                   ...(isMobile ? { fontSize: '1.2rem' } : { fontSize: '1.4rem' })
                 }}>{item.label}</h3>
                 <p style={{
                   margin: 0,
+                  transition: 'all 0.3s ease',
                   ...(isMobile ? { fontSize: '0.85rem' } : { fontSize: '0.95rem' })
                 }}>{item.sub}</p>
               </div>
@@ -497,10 +643,20 @@ const ClassroomPortalPage: React.FC = () => {
                           color: 'white',
                           border: '1px solid rgba(255,255,255,0.2)',
                           marginBottom: '15px',
-                          outline: 'none'
+                          outline: 'none',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer'
                         }}
                         value={tempYear}
                         onChange={(e) => setTempYear(e.target.value)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = PALETTE.accent;
+                          e.currentTarget.style.background = '#243b31';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                          e.currentTarget.style.background = '#1a2e26';
+                        }}
                       >
                         <option value="">-- Elige --</option>
                         {item.years?.map(y => <option key={y} value={y}>{y}</option>)}
@@ -534,7 +690,7 @@ const ClassroomPortalPage: React.FC = () => {
                               justifyContent: 'center',
                               borderRadius: '12px',
                               fontWeight: 'bold',
-                              transition: '0.3s',
+                              transition: 'all 0.3s ease',
                               border: '1px solid rgba(255,255,255,0.1)',
                               cursor: 'pointer',
                               ...(isMobile ? {
@@ -546,6 +702,18 @@ const ClassroomPortalPage: React.FC = () => {
                               }),
                               background: tempSection === sec ? PALETTE.accent : 'rgba(255,255,255,0.05)',
                               color: tempSection === sec ? '#081a14' : 'white'
+                            }}
+                            onMouseEnter={(e) => {
+                              if (tempSection !== sec) {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                              }
+                            }}
+                            onMouseLeave={(e) => {
+                              if (tempSection !== sec) {
+                                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                              }
                             }}
                           >
                             {sec}
@@ -566,9 +734,19 @@ const ClassroomPortalPage: React.FC = () => {
                           color: '#081a14',
                           fontWeight: 'bold',
                           cursor: 'pointer',
-                          transition: '0.3s',
+                          transition: 'all 0.3s ease',
                           textTransform: 'uppercase',
                           fontSize: '0.8rem'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#00cc88';
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                          e.currentTarget.style.boxShadow = '0 5px 15px rgba(0, 187, 126, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = PALETTE.accent;
+                          e.currentTarget.style.transform = 'scale(1)';
+                          e.currentTarget.style.boxShadow = 'none';
                         }}
                       >
                         CONFIRMAR
@@ -603,7 +781,7 @@ const ClassroomPortalPage: React.FC = () => {
                               justifyContent: 'center',
                               borderRadius: '12px',
                               fontWeight: 'bold',
-                              transition: '0.3s',
+                              transition: 'all 0.3s ease',
                               border: '1px solid rgba(255,255,255,0.1)',
                               ...(isMobile ? {
                                 width: '40px',
@@ -617,6 +795,18 @@ const ClassroomPortalPage: React.FC = () => {
                             }}
                             className="sec-btn"
                             onClick={() => isMobile && setActiveMenu(null)}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = PALETTE.accent;
+                              e.currentTarget.style.color = '#081a14';
+                              e.currentTarget.style.transform = 'translateY(-3px)';
+                              e.currentTarget.style.boxShadow = '0 5px 15px rgba(0, 187, 126, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                              e.currentTarget.style.color = 'white';
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = 'none';
+                            }}
                           >
                             {sec}
                           </Link>
@@ -648,6 +838,7 @@ const ClassroomPortalPage: React.FC = () => {
             border: '1px solid rgba(255,255,255,0.08)',
             textAlign: 'center',
             backdropFilter: 'blur(5px)',
+            transition: 'all 0.3s ease',
             ...(isMobile ? {
               padding: '2rem 1rem',
               borderRadius: '30px'
@@ -655,6 +846,16 @@ const ClassroomPortalPage: React.FC = () => {
               padding: '4rem 3rem',
               borderRadius: '50px'
             })
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+            e.currentTarget.style.transform = 'translateY(-5px)';
+            e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
           }}>
             <h4 style={{
               fontWeight: '900',
@@ -681,24 +882,36 @@ const ClassroomPortalPage: React.FC = () => {
             }}>
               Mantente al tanto de eventos, feriados y evaluaciones para este año escolar 2026.
             </p>
-            <button style={{
-              border: 'none',
-              background: 'linear-gradient(180deg, #e3c5a5 0%, #c1a17b 100%)',
-              fontWeight: 'bold',
-              color: '#1a2e26',
-              cursor: 'pointer',
-              transition: '0.3s',
-              borderRadius: '50px',
-              ...(isMobile ? {
-                marginTop: '1.5rem',
-                padding: '12px 30px',
-                fontSize: '0.9rem'
-              } : {
-                marginTop: '2.5rem',
-                padding: '16px 40px',
-                fontSize: '1.1rem'
-              })
-            }}>
+            <button 
+              style={{
+                border: 'none',
+                background: 'linear-gradient(180deg, #e3c5a5 0%, #c1a17b 100%)',
+                fontWeight: 'bold',
+                color: '#1a2e26',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                borderRadius: '50px',
+                ...(isMobile ? {
+                  marginTop: '1.5rem',
+                  padding: '12px 30px',
+                  fontSize: '0.9rem'
+                } : {
+                  marginTop: '2.5rem',
+                  padding: '16px 40px',
+                  fontSize: '1.1rem'
+                })
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(180deg, #f0d5b5 0%, #d4b08c 100%)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(180deg, #e3c5a5 0%, #c1a17b 100%)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
               Ver Agenda Completa
             </button>
           </div>
@@ -744,6 +957,16 @@ const ClassroomPortalPage: React.FC = () => {
             zIndex: 1000,
             transition: 'all 0.3s ease'
           }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#00cc88';
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = PALETTE.accent;
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.3)';
+          }}
         >
           ↑
         </button>
@@ -751,17 +974,61 @@ const ClassroomPortalPage: React.FC = () => {
 
       <style jsx global>{`
         body { margin: 0; padding: 0; overflow-x: hidden; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
+        
+        .fade-in { 
+          animation: fadeIn 0.25s ease-out; 
+        }
+        
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        .sec-btn:hover {
-          background: ${PALETTE.accent} !important;
-          color: #081a14 !important;
-          transform: translateY(-3px);
-          box-shadow: 0 5px 15px rgba(0, 187, 126, 0.4);
+        
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
+        
+        @keyframes pulse {
+          0% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.05);
+          }
+          100% {
+            transform: scale(1);
+          }
+        }
+        
+        .hover-glow {
+          animation: glow 0.3s ease-out;
+          text-shadow: 0 0 10px rgba(0, 187, 126, 0.5);
+        }
+        
+        .hover-pulse {
+          animation: pulse 0.3s ease-out;
+        }
+        
+        @keyframes glow {
+          from {
+            text-shadow: 0 0 0px rgba(0, 187, 126, 0);
+          }
+          to {
+            text-shadow: 0 0 10px rgba(0, 187, 126, 0.5);
+          }
+        }
+        
+        .sec-btn {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
         @media (max-width: 768px) {
           .sec-btn:active {
             transform: scale(0.95);
