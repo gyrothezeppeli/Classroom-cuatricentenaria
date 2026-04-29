@@ -2,23 +2,26 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const COLORES = {
   principal: '#00BB7E',
   oscuro: '#102d22',
   acento: '#064E3B',
-  sandBorder: 'rgba(92, 117, 100, 0.5)',
+  sandBorder: '#5c7564',
   deepBg: '#1a2e26',
+  darkBanner: 'linear-gradient(160deg, #102d22 0%, #081a14 100%)',
   textLight: '#f3f4f6'
 };
 
-// Fijo para 1er grado, Sección B
-const GRADO_ACTUAL = '1er grado';
-const SECCION_ACTUAL = 'B';
+// ACTUALIZADO: 3er grado, Sección B
+const GRADO = '3er grado';
+const SECCION = 'B';
 
-const getKey = (): string => `${GRADO_ACTUAL}_${SECCION_ACTUAL}`;
+const getKey = (): string => `${GRADO}_${SECCION}`;
 
 const ClassroomPage: React.FC = () => {
+  const router = useRouter();
   const [seccionActiva, setSeccionActiva] = useState('tareas');
 
   const [tareas, setTareas] = useState<any[]>([]);
@@ -28,25 +31,29 @@ const ClassroomPage: React.FC = () => {
   const [planEvaluacion, setPlanEvaluacion] = useState<any[]>([]);
 
   const [nuevaTarea, setNuevaTarea] = useState({ titulo: '', descripcion: '', fechaEntrega: '', materia: '' });
-  const [nuevoAviso, setNuevoAviso] = useState({ titulo: '', mensaje: '', importante: false });
-  const [nuevoMaterial, setNuevoMaterial] = useState({ titulo: '', tipo: 'material', archivo: '', materia: '' });
-  const [nuevaGuia, setNuevaGuia] = useState({ titulo: '', descripcion: '', materia: '', archivo: '' });
-  const [nuevoPlan, setNuevoPlan] = useState({ materia: '', tipoEvaluacion: '', porcentaje: '', fecha: '' });
+  const [nuevoAviso, setNuevoAviso] = useState({ titulo: '', descripcion: '', fecha: '' });
+  const [nuevoMaterial, setNuevoMaterial] = useState({ titulo: '', descripcion: '', enlace: '' });
+  const [nuevaGuia, setNuevaGuia] = useState({ titulo: '', descripcion: '', archivo: '' });
+  const [nuevoPlan, setNuevoPlan] = useState({ periodo: '', contenido: '', fecha: '' });
 
   const currentKey = getKey();
 
   useEffect(() => {
     const cargarDatos = () => {
-      const t = localStorage.getItem(`tareas_${currentKey}`);
-      setTareas(t ? JSON.parse(t) : []);
-      const a = localStorage.getItem(`avisos_${currentKey}`);
-      setAvisos(a ? JSON.parse(a) : []);
-      const m = localStorage.getItem(`materiales_${currentKey}`);
-      setMateriales(m ? JSON.parse(m) : []);
-      const g = localStorage.getItem(`guias_${currentKey}`);
-      setGuias(g ? JSON.parse(g) : []);
-      const p = localStorage.getItem(`plan_${currentKey}`);
-      setPlanEvaluacion(p ? JSON.parse(p) : []);
+      const storedTareas = localStorage.getItem(`tareas_${currentKey}`);
+      setTareas(storedTareas ? JSON.parse(storedTareas) : []);
+
+      const avisosStored = localStorage.getItem(`avisos_${currentKey}`);
+      setAvisos(avisosStored ? JSON.parse(avisosStored) : []);
+
+      const materialesStored = localStorage.getItem(`materiales_${currentKey}`);
+      setMateriales(materialesStored ? JSON.parse(materialesStored) : []);
+
+      const guiasStored = localStorage.getItem(`guias_${currentKey}`);
+      setGuias(guiasStored ? JSON.parse(guiasStored) : []);
+
+      const planStored = localStorage.getItem(`plan_${currentKey}`);
+      setPlanEvaluacion(planStored ? JSON.parse(planStored) : []);
     };
     cargarDatos();
   }, [currentKey]);
@@ -63,28 +70,32 @@ const ClassroomPage: React.FC = () => {
     setNuevaTarea({ titulo: '', descripcion: '', fechaEntrega: '', materia: '' });
   };
 
+  const toggleTarea = (id: number) => {
+    setTareas(tareas.map(t => t.id === id ? { ...t, completado: !t.completado } : t));
+  };
+
   const agregarAviso = () => {
-    if (!nuevoAviso.titulo || !nuevoAviso.mensaje) return;
-    setAvisos([...avisos, { ...nuevoAviso, id: Date.now(), fecha: new Date().toLocaleDateString() }]);
-    setNuevoAviso({ titulo: '', mensaje: '', importante: false });
+    if (!nuevoAviso.titulo) return;
+    setAvisos([...avisos, { ...nuevoAviso, id: Date.now(), fecha: nuevoAviso.fecha || new Date().toLocaleDateString() }]);
+    setNuevoAviso({ titulo: '', descripcion: '', fecha: '' });
   };
 
   const agregarMaterial = () => {
     if (!nuevoMaterial.titulo) return;
-    setMateriales([...materiales, { ...nuevoMaterial, id: Date.now(), fecha: new Date().toLocaleDateString() }]);
-    setNuevoMaterial({ titulo: '', tipo: 'material', archivo: '', materia: '' });
+    setMateriales([...materiales, { ...nuevoMaterial, id: Date.now() }]);
+    setNuevoMaterial({ titulo: '', descripcion: '', enlace: '' });
   };
 
   const agregarGuia = () => {
     if (!nuevaGuia.titulo) return;
-    setGuias([...guias, { ...nuevaGuia, id: Date.now(), fecha: new Date().toLocaleDateString() }]);
-    setNuevaGuia({ titulo: '', descripcion: '', materia: '', archivo: '' });
+    setGuias([...guias, { ...nuevaGuia, id: Date.now() }]);
+    setNuevaGuia({ titulo: '', descripcion: '', archivo: '' });
   };
 
   const agregarPlan = () => {
-    if (!nuevoPlan.materia || !nuevoPlan.tipoEvaluacion) return;
+    if (!nuevoPlan.periodo) return;
     setPlanEvaluacion([...planEvaluacion, { ...nuevoPlan, id: Date.now() }]);
-    setNuevoPlan({ materia: '', tipoEvaluacion: '', porcentaje: '', fecha: '' });
+    setNuevoPlan({ periodo: '', contenido: '', fecha: '' });
   };
 
   const eliminarElemento = (id: number, tipo: string) => {
@@ -97,582 +108,268 @@ const ClassroomPage: React.FC = () => {
   };
 
   return (
-    <div style={{ 
-      fontFamily: "'Montserrat', sans-serif", 
-      background: COLORES.deepBg, 
-      minHeight: '100vh', 
-      color: 'white',
-      backgroundImage: 'radial-gradient(circle at top right, rgba(0, 187, 126, 0.05), transparent)',
-    }}>
+    <div style={{ fontFamily: "'Montserrat', sans-serif", background: COLORES.deepBg, minHeight: '100vh', color: 'white' }}>
       
-      <nav style={{ 
-        background: 'rgba(16, 45, 34, 0.8)', 
-        backdropFilter: 'blur(10px)',
-        padding: '1.2rem 5%', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        borderBottom: `1px solid ${COLORES.sandBorder}`,
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        flexWrap: 'wrap',
-        gap: '15px'
-      }}>
-        <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.1rem', letterSpacing: '1px' }}>
-          U.E CIUDAD CUATRICENTENARIA
-        </Link>
-        <div style={{ 
-          background: 'rgba(0, 187, 126, 0.15)', 
-          padding: '0.5rem 1.2rem', 
-          borderRadius: '50px',
-          border: `1px solid ${COLORES.principal}`,
-          fontSize: '0.8rem',
-          fontWeight: 'bold',
-          letterSpacing: '1px'
-        }}>
-          📚 {GRADO_ACTUAL.toUpperCase()} - SECCIÓN {SECCION_ACTUAL}
+      <nav style={{ background: COLORES.darkBanner, padding: '1.5rem 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${COLORES.sandBorder}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <button 
+            onClick={() => router.push('/')}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: `1px solid ${COLORES.sandBorder}`,
+              borderRadius: '10px',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              transition: '0.3s',
+              backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          >
+            ← Regresar al Inicio
+          </button>
+          <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.2rem' }}>
+            U.E Ciudad Cuatricentenaria
+          </Link>
+        </div>
+        <div style={seccionBadgeStyle}>
+          {GRADO} - Sección {SECCION}
         </div>
       </nav>
 
-      <header style={{ padding: '5rem 10% 3rem', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '4rem', fontWeight: '900', margin: 0, textTransform: 'uppercase', color: COLORES.principal }}>
-          1ER GRADO
+      <header style={{ padding: '4rem 10% 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
+        <h1 style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '-2px', margin: 0, textTransform: 'uppercase' }}>
+          {GRADO}
         </h1>
-        <p style={{ fontSize: '1.1rem', opacity: 0.6, letterSpacing: '3px', marginTop: '10px' }}>
-          SECCIÓN B • EDUCACIÓN PRIMARIA
-        </p>
-        <div style={{ 
-          marginTop: '1.5rem', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '15px',
-          flexWrap: 'wrap'
-        }}>
-          <span style={infoBadge}>👥 Docente: María González</span>
-          <span style={infoBadge}>🏫 Año Escolar: 2025-2026</span>
-          <span style={infoBadge}>⏰ Horario: 7:00 AM - 12:00 PM</span>
-        </div>
+        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Primaria</p>
       </header>
 
-      <section style={{ padding: '0 10%', marginBottom: '4rem' }}>
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.03)', 
-          backdropFilter: 'blur(5px)',
-          borderRadius: '100px', 
-          padding: '0.6rem', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          gap: '8px', 
-          border: '1px solid rgba(255, 255, 255, 0.1)', 
-          maxWidth: '900px',
-          margin: '0 auto',
-          flexWrap: 'wrap'
-        }}>
-          {[
-            { id: 'tareas', label: '📋 TAREAS', icon: '📋' },
-            { id: 'avisos', label: '📢 AVISOS', icon: '📢' },
-            { id: 'materiales', label: '📚 MATERIALES', icon: '📚' },
-            { id: 'guias', label: '📘 GUÍAS', icon: '📘' },
-            { id: 'plan', label: '📊 PLAN EVALUACIÓN', icon: '📊' }
-          ].map(sec => (
-            <button key={sec.id} onClick={() => setSeccionActiva(sec.id)} style={{ 
-              padding: '0.7rem 1.5rem', 
-              borderRadius: '50px', 
-              border: 'none', 
-              background: seccionActiva === sec.id ? COLORES.principal : 'transparent',
-              color: seccionActiva === sec.id ? '#1a2e26' : 'white', 
-              fontWeight: 'bold', 
-              cursor: 'pointer', 
-              transition: '0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-              fontSize: '0.7rem',
-              letterSpacing: '1px'
+      <section style={{ padding: '0 10%', marginBottom: '3rem' }}>
+        <div style={{ background: COLORES.darkBanner, borderRadius: '100px', padding: '1rem', display: 'flex', justifyContent: 'center', gap: '10px', border: '1px solid rgba(255,255,255,0.1)', flexWrap: 'wrap' }}>
+          {['tareas', 'avisos', 'materiales', 'guias', 'plan'].map(sec => (
+            <button key={sec} onClick={() => setSeccionActiva(sec)} style={{ 
+              padding: '0.8rem 1.5rem', borderRadius: '50px', border: 'none', 
+              background: seccionActiva === sec ? COLORES.principal : 'transparent',
+              color: 'white', fontWeight: 'bold', cursor: 'pointer', transition: '0.3s'
             }}>
-              {sec.label}
+              {sec === 'plan' ? 'PLAN EVALUACIÓN' : sec.toUpperCase()}
             </button>
           ))}
         </div>
       </section>
 
-      <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 2rem 5rem' }}>
+      <main style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 2rem 5rem' }}>
         
         {seccionActiva === 'tareas' && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div>
             <div style={formCardStyle}>
-              <h3 style={labelStyle}>➕ Nueva Asignación</h3>
+              <h3 style={{ marginTop: 0 }}>Nueva Tarea</h3>
               <div style={gridStyle}>
-                <input 
-                  type="text" 
-                  placeholder="TÍTULO DE LA TAREA" 
-                  value={nuevaTarea.titulo} 
-                  onChange={(e) => setNuevaTarea({...nuevaTarea, titulo: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="MATERIA (Ej: Lengua, Matemática)" 
-                  value={nuevaTarea.materia} 
-                  onChange={(e) => setNuevaTarea({...nuevaTarea, materia: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="date" 
-                  value={nuevaTarea.fechaEntrega} 
-                  onChange={(e) => setNuevaTarea({...nuevaTarea, fechaEntrega: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <textarea 
-                  placeholder="DESCRIPCIÓN de la tarea (opcional)" 
-                  value={nuevaTarea.descripcion} 
-                  onChange={(e) => setNuevaTarea({...nuevaTarea, descripcion: e.target.value})} 
-                  style={{...inputStyle, gridColumn: '1/-1'}} 
-                  rows={2} 
-                />
-                <button onClick={agregarTarea} style={btnPrincipalStyle}>📌 AGREGAR TAREA</button>
+                <input type="text" placeholder="Título" value={nuevaTarea.titulo} onChange={(e) => setNuevaTarea({...nuevaTarea, titulo: e.target.value})} style={inputStyle} />
+                <input type="date" value={nuevaTarea.fechaEntrega} onChange={(e) => setNuevaTarea({...nuevaTarea, fechaEntrega: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Materia" value={nuevaTarea.materia} onChange={(e) => setNuevaTarea({...nuevaTarea, materia: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Descripción (opcional)" value={nuevaTarea.descripcion} onChange={(e) => setNuevaTarea({...nuevaTarea, descripcion: e.target.value})} style={inputStyle} />
+                <button onClick={agregarTarea} style={btnPrincipalStyle}>Añadir Tarea</button>
               </div>
             </div>
 
-            {tareas.length === 0 && (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: '3rem' }}>📝</span>
-                <p>No hay tareas asignadas para 1ro B</p>
-                <small>Agrega la primera tarea usando el formulario</small>
-              </div>
-            )}
-            
-            {tareas.map(tarea => (
+            {tareas.length > 0 ? tareas.map(tarea => (
               <div key={tarea.id} style={itemCardStyle}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={tarea.completado} 
-                      onChange={() => {
-                        setTareas(tareas.map(t => t.id === tarea.id ? {...t, completado: !t.completado} : t));
-                      }} 
-                      style={{ width: '22px', height: '22px', accentColor: COLORES.principal, cursor: 'pointer' }} 
-                    />
-                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700', textDecoration: tarea.completado ? 'line-through' : 'none', opacity: tarea.completado ? 0.6 : 1 }}>
-                      {tarea.titulo}
-                    </h4>
-                    {tarea.materia && <span style={badgeStyle}>{tarea.materia}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                  <input type="checkbox" checked={tarea.completado} onChange={() => toggleTarea(tarea.id)} style={{ width: '25px', height: '25px', cursor: 'pointer' }} />
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, fontSize: '1.3rem', textDecoration: tarea.completado ? 'line-through' : 'none' }}>{tarea.titulo}</h4>
+                    <p style={{ margin: '5px 0 0', color: '#9ca3af' }}>
+                      {tarea.materia && `${tarea.materia} - `}Entrega: {tarea.fechaEntrega}
+                      {tarea.descripcion && <span style={{ display: 'block', marginTop: '5px' }}>{tarea.descripcion}</span>}
+                    </p>
                   </div>
-                  {tarea.descripcion && <p style={{ margin: '10px 0 0 37px', opacity: 0.7, fontSize: '0.9rem' }}>{tarea.descripcion}</p>}
-                  <p style={{ margin: '8px 0 0 37px', color: COLORES.principal, fontSize: '0.8rem', fontWeight: '600' }}>
-                    📅 ENTREGA: {tarea.fechaEntrega}
-                  </p>
                 </div>
-                <button onClick={() => eliminarElemento(tarea.id, 'tarea')} style={btnDangerStyle}>🗑️ Eliminar</button>
+                <button onClick={() => eliminarElemento(tarea.id, 'tarea')} style={btnDangerStyle}>Eliminar</button>
               </div>
-            ))}
+            )) : <p style={{textAlign: 'center', opacity: 0.5, padding: '2rem'}}>No hay tareas registradas para esta sección.</p>}
           </div>
         )}
 
         {seccionActiva === 'avisos' && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div>
             <div style={formCardStyle}>
-              <h3 style={labelStyle}>📢 Publicar Aviso para 1ro B</h3>
+              <h3 style={{ marginTop: 0 }}>Nuevo Aviso</h3>
               <div style={gridStyle}>
-                <input 
-                  type="text" 
-                  placeholder="TÍTULO DEL AVISO" 
-                  value={nuevoAviso.titulo} 
-                  onChange={(e) => setNuevoAviso({...nuevoAviso, titulo: e.target.value})} 
-                  style={{...inputStyle, gridColumn: '1/-1'}} 
-                />
-                <textarea 
-                  placeholder="MENSAJE DEL AVISO" 
-                  value={nuevoAviso.mensaje} 
-                  onChange={(e) => setNuevoAviso({...nuevoAviso, mensaje: e.target.value})} 
-                  style={{...inputStyle, gridColumn: '1/-1'}} 
-                  rows={3} 
-                />
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
-                  <input 
-                    type="checkbox" 
-                    checked={nuevoAviso.importante} 
-                    onChange={(e) => setNuevoAviso({...nuevoAviso, importante: e.target.checked})} 
-                  />
-                  <span style={{ fontSize: '0.8rem' }}>⚠️ Marcar como importante (aparecerá destacado)</span>
-                </label>
-                <button onClick={agregarAviso} style={btnPrincipalStyle}>📢 PUBLICAR AVISO</button>
+                <input type="text" placeholder="Título" value={nuevoAviso.titulo} onChange={(e) => setNuevoAviso({...nuevoAviso, titulo: e.target.value})} style={inputStyle} />
+                <input type="date" value={nuevoAviso.fecha} onChange={(e) => setNuevoAviso({...nuevoAviso, fecha: e.target.value})} style={inputStyle} />
+                <textarea placeholder="Descripción del aviso" value={nuevoAviso.descripcion} onChange={(e) => setNuevoAviso({...nuevoAviso, descripcion: e.target.value})} style={{...inputStyle, gridColumn: 'span 2'}} rows={3} />
+                <button onClick={agregarAviso} style={btnPrincipalStyle}>Publicar Aviso</button>
               </div>
             </div>
 
-            {avisos.length === 0 && (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: '3rem' }}>📢</span>
-                <p>No hay avisos publicados</p>
-                <small>Comparte información importante con los padres y estudiantes</small>
-              </div>
-            )}
-
-            {avisos.map(aviso => (
-              <div key={aviso.id} style={{...itemCardStyle, borderLeft: aviso.importante ? `4px solid ${COLORES.principal}` : 'none', flexDirection: 'column', alignItems: 'flex-start', gap: '15px' }}>
-                <div style={{ width: '100%' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                    <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '700' }}>
-                      {aviso.importante && '🔔 '}{aviso.titulo}
-                    </h4>
-                    <small style={{ color: COLORES.principal, fontWeight: 'bold' }}>{aviso.fecha}</small>
-                  </div>
-                  <p style={{ margin: '12px 0 0', opacity: 0.8, lineHeight: '1.5' }}>{aviso.mensaje}</p>
+            {avisos.length > 0 ? avisos.map(aviso => (
+              <div key={aviso.id} style={itemCardStyle}>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: 0, fontSize: '1.3rem' }}>{aviso.titulo}</h4>
+                  <p style={{ margin: '5px 0', color: '#9ca3af', fontSize: '0.9rem' }}>📅 {aviso.fecha}</p>
+                  <p style={{ margin: '10px 0 0' }}>{aviso.descripcion}</p>
                 </div>
-                <button onClick={() => eliminarElemento(aviso.id, 'aviso')} style={btnDangerStyle}>🗑️ Eliminar</button>
+                <button onClick={() => eliminarElemento(aviso.id, 'aviso')} style={btnDangerStyle}>Eliminar</button>
               </div>
-            ))}
+            )) : <p style={{textAlign: 'center', opacity: 0.5, padding: '2rem'}}>No hay avisos para mostrar.</p>}
           </div>
         )}
 
         {seccionActiva === 'materiales' && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div>
             <div style={formCardStyle}>
-              <h3 style={labelStyle}>📚 Agregar Material de Estudio</h3>
+              <h3 style={{ marginTop: 0 }}>Nuevo Material Didáctico</h3>
               <div style={gridStyle}>
-                <input 
-                  type="text" 
-                  placeholder="TÍTULO DEL MATERIAL" 
-                  value={nuevoMaterial.titulo} 
-                  onChange={(e) => setNuevoMaterial({...nuevoMaterial, titulo: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="MATERIA" 
-                  value={nuevoMaterial.materia} 
-                  onChange={(e) => setNuevoMaterial({...nuevoMaterial, materia: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <select 
-                  value={nuevoMaterial.tipo} 
-                  onChange={(e) => setNuevoMaterial({...nuevoMaterial, tipo: e.target.value})} 
-                  style={inputStyle}
-                >
-                  <option value="material">📖 Material de lectura</option>
-                  <option value="video">🎥 Video educativo</option>
-                  <option value="ejercicio">✏️ Ejercicios prácticos</option>
-                  <option value="recurso">🔗 Recurso externo</option>
-                </select>
-                <input 
-                  type="text" 
-                  placeholder="ENLACE / REFERENCIA" 
-                  value={nuevoMaterial.archivo} 
-                  onChange={(e) => setNuevoMaterial({...nuevoMaterial, archivo: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <button onClick={agregarMaterial} style={btnPrincipalStyle}>📥 AGREGAR MATERIAL</button>
+                <input type="text" placeholder="Título del material" value={nuevoMaterial.titulo} onChange={(e) => setNuevoMaterial({...nuevoMaterial, titulo: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Enlace o recurso" value={nuevoMaterial.enlace} onChange={(e) => setNuevoMaterial({...nuevoMaterial, enlace: e.target.value})} style={inputStyle} />
+                <textarea placeholder="Descripción" value={nuevoMaterial.descripcion} onChange={(e) => setNuevoMaterial({...nuevoMaterial, descripcion: e.target.value})} style={{...inputStyle, gridColumn: 'span 2'}} rows={3} />
+                <button onClick={agregarMaterial} style={btnPrincipalStyle}>Agregar Material</button>
               </div>
             </div>
 
-            {materiales.length === 0 && (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: '3rem' }}>📚</span>
-                <p>No hay materiales disponibles</p>
-                <small>Comparte recursos educativos con tus estudiantes</small>
-              </div>
-            )}
-
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {materiales.map(material => (
-                <div key={material.id} style={itemCardStyle}>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '1.5rem' }}>
-                        {material.tipo === 'video' ? '🎥' : material.tipo === 'ejercicio' ? '✏️' : material.tipo === 'recurso' ? '🔗' : '📖'}
-                      </span>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{material.titulo}</h4>
-                      {material.materia && <span style={badgeStyle}>{material.materia}</span>}
-                    </div>
-                    {material.archivo && (
-                      <p style={{ margin: '8px 0 0 35px', fontSize: '0.8rem', opacity: 0.6 }}>
-                        🔗 {material.archivo}
-                      </p>
-                    )}
-                    <small style={{ margin: '5px 0 0 35px', display: 'block', color: COLORES.principal }}>
-                      📅 Agregado: {material.fecha}
-                    </small>
-                  </div>
-                  <button onClick={() => eliminarElemento(material.id, 'material')} style={btnDangerStyle}>🗑️</button>
+            {materiales.length > 0 ? materiales.map(material => (
+              <div key={material.id} style={itemCardStyle}>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: 0, fontSize: '1.3rem' }}>📚 {material.titulo}</h4>
+                  {material.enlace && <p style={{ margin: '5px 0', color: COLORES.principal }}>🔗 {material.enlace}</p>}
+                  <p style={{ margin: '10px 0 0' }}>{material.descripcion}</p>
                 </div>
-              ))}
-            </div>
+                <button onClick={() => eliminarElemento(material.id, 'material')} style={btnDangerStyle}>Eliminar</button>
+              </div>
+            )) : <p style={{textAlign: 'center', opacity: 0.5, padding: '2rem'}}>No hay materiales registrados.</p>}
           </div>
         )}
 
         {seccionActiva === 'guias' && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div>
             <div style={formCardStyle}>
-              <h3 style={labelStyle}>📘 Agregar Guía de Estudio</h3>
+              <h3 style={{ marginTop: 0 }}>Nueva Guía</h3>
               <div style={gridStyle}>
-                <input 
-                  type="text" 
-                  placeholder="TÍTULO DE LA GUÍA" 
-                  value={nuevaGuia.titulo} 
-                  onChange={(e) => setNuevaGuia({...nuevaGuia, titulo: e.target.value})} 
-                  style={{...inputStyle, gridColumn: '1/-1'}} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="MATERIA" 
-                  value={nuevaGuia.materia} 
-                  onChange={(e) => setNuevaGuia({...nuevaGuia, materia: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="ENLACE / DESCARGA" 
-                  value={nuevaGuia.archivo} 
-                  onChange={(e) => setNuevaGuia({...nuevaGuia, archivo: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <textarea 
-                  placeholder="DESCRIPCIÓN DE LA GUÍA" 
-                  value={nuevaGuia.descripcion} 
-                  onChange={(e) => setNuevaGuia({...nuevaGuia, descripcion: e.target.value})} 
-                  style={{...inputStyle, gridColumn: '1/-1'}} 
-                  rows={2} 
-                />
-                <button onClick={agregarGuia} style={btnPrincipalStyle}>📘 AGREGAR GUÍA</button>
+                <input type="text" placeholder="Título de la guía" value={nuevaGuia.titulo} onChange={(e) => setNuevaGuia({...nuevaGuia, titulo: e.target.value})} style={inputStyle} />
+                <input type="text" placeholder="Archivo o enlace" value={nuevaGuia.archivo} onChange={(e) => setNuevaGuia({...nuevaGuia, archivo: e.target.value})} style={inputStyle} />
+                <textarea placeholder="Descripción" value={nuevaGuia.descripcion} onChange={(e) => setNuevaGuia({...nuevaGuia, descripcion: e.target.value})} style={{...inputStyle, gridColumn: 'span 2'}} rows={3} />
+                <button onClick={agregarGuia} style={btnPrincipalStyle}>Agregar Guía</button>
               </div>
             </div>
 
-            {guias.length === 0 && (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: '3rem' }}>📘</span>
-                <p>No hay guías de estudio disponibles</p>
-                <small>Comparte guías para apoyar el aprendizaje</small>
-              </div>
-            )}
-
-            {guias.map(guia => (
+            {guias.length > 0 ? guias.map(guia => (
               <div key={guia.id} style={itemCardStyle}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '1.5rem' }}>📘</span>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{guia.titulo}</h4>
-                    {guia.materia && <span style={badgeStyle}>{guia.materia}</span>}
-                  </div>
-                  {guia.descripcion && <p style={{ margin: '8px 0 0 35px', opacity: 0.7 }}>{guia.descripcion}</p>}
-                  {guia.archivo && (
-                    <p style={{ margin: '5px 0 0 35px', fontSize: '0.8rem' }}>
-                      📎 <a href={guia.archivo} target="_blank" rel="noopener noreferrer" style={{ color: COLORES.principal, textDecoration: 'none' }}>Ver/Descargar Guía</a>
-                    </p>
-                  )}
-                  <small style={{ margin: '5px 0 0 35px', display: 'block', color: COLORES.principal }}>📅 {guia.fecha}</small>
+                  <h4 style={{ margin: 0, fontSize: '1.3rem' }}>📖 {guia.titulo}</h4>
+                  {guia.archivo && <p style={{ margin: '5px 0', color: COLORES.principal }}>📎 {guia.archivo}</p>}
+                  <p style={{ margin: '10px 0 0' }}>{guia.descripcion}</p>
                 </div>
-                <button onClick={() => eliminarElemento(guia.id, 'guia')} style={btnDangerStyle}>🗑️</button>
+                <button onClick={() => eliminarElemento(guia.id, 'guia')} style={btnDangerStyle}>Eliminar</button>
               </div>
-            ))}
+            )) : <p style={{textAlign: 'center', opacity: 0.5, padding: '2rem'}}>No hay guías registradas.</p>}
           </div>
         )}
 
         {seccionActiva === 'plan' && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div>
             <div style={formCardStyle}>
-              <h3 style={labelStyle}>📊 Plan de Evaluación - 1er Grado B</h3>
+              <h3 style={{ marginTop: 0 }}>Nuevo Plan de Evaluación</h3>
               <div style={gridStyle}>
-                <input 
-                  type="text" 
-                  placeholder="MATERIA" 
-                  value={nuevoPlan.materia} 
-                  onChange={(e) => setNuevoPlan({...nuevoPlan, materia: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="text" 
-                  placeholder="TIPO DE EVALUACIÓN" 
-                  value={nuevoPlan.tipoEvaluacion} 
-                  onChange={(e) => setNuevoPlan({...nuevoPlan, tipoEvaluacion: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="number" 
-                  placeholder="PORCENTAJE %" 
-                  value={nuevoPlan.porcentaje} 
-                  onChange={(e) => setNuevoPlan({...nuevoPlan, porcentaje: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <input 
-                  type="date" 
-                  placeholder="FECHA" 
-                  value={nuevoPlan.fecha} 
-                  onChange={(e) => setNuevoPlan({...nuevoPlan, fecha: e.target.value})} 
-                  style={inputStyle} 
-                />
-                <button onClick={agregarPlan} style={btnPrincipalStyle}>📊 AGREGAR EVALUACIÓN</button>
+                <input type="text" placeholder="Período (Ej: 1er Lapso)" value={nuevoPlan.periodo} onChange={(e) => setNuevoPlan({...nuevoPlan, periodo: e.target.value})} style={inputStyle} />
+                <input type="date" value={nuevoPlan.fecha} onChange={(e) => setNuevoPlan({...nuevoPlan, fecha: e.target.value})} style={inputStyle} />
+                <textarea placeholder="Contenido / Estrategias de evaluación" value={nuevoPlan.contenido} onChange={(e) => setNuevoPlan({...nuevoPlan, contenido: e.target.value})} style={{...inputStyle, gridColumn: 'span 2'}} rows={4} />
+                <button onClick={agregarPlan} style={btnPrincipalStyle}>Agregar Plan</button>
               </div>
             </div>
 
-            {planEvaluacion.length === 0 ? (
-              <div style={emptyStateStyle}>
-                <span style={{ fontSize: '3rem' }}>📊</span>
-                <p>No hay evaluaciones registradas</p>
-                <small>Completa el plan de evaluación del período</small>
+            {planEvaluacion.length > 0 ? planEvaluacion.map(plan => (
+              <div key={plan.id} style={itemCardStyle}>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ margin: 0, fontSize: '1.3rem', color: COLORES.principal }}>{plan.periodo}</h4>
+                  {plan.fecha && <p style={{ margin: '5px 0', color: '#9ca3af', fontSize: '0.9rem' }}>📅 {plan.fecha}</p>}
+                  <p style={{ margin: '10px 0 0', whiteSpace: 'pre-wrap' }}>{plan.contenido}</p>
+                </div>
+                <button onClick={() => eliminarElemento(plan.id, 'plan')} style={btnDangerStyle}>Eliminar</button>
               </div>
-            ) : (
-              <div style={{...formCardStyle, overflowX: 'auto', padding: '0' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ textAlign: 'left', fontSize: '0.7rem', opacity: 0.5, letterSpacing: '2px', borderBottom: `1px solid ${COLORES.sandBorder}` }}>
-                      <th style={{ padding: '20px 15px' }}>MATERIA</th>
-                      <th style={{ padding: '20px 15px' }}>EVALUACIÓN</th>
-                      <th style={{ padding: '20px 15px' }}>%</th>
-                      <th style={{ padding: '20px 15px' }}>FECHA</th>
-                      <th style={{ padding: '20px 15px' }}></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {planEvaluacion.map(e => (
-                      <tr key={e.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '15px', fontWeight: 'bold' }}>{e.materia}</td>
-                        <td style={{ padding: '15px', opacity: 0.8 }}>{e.tipoEvaluacion}</td>
-                        <td style={{ padding: '15px', color: COLORES.principal, fontWeight: '900' }}>{e.porcentaje}%</td>
-                        <td style={{ padding: '15px' }}>{e.fecha || 'Por definir'}</td>
-                        <td style={{ padding: '15px' }}>
-                          <button onClick={() => eliminarElemento(e.id, 'plan')} style={{...btnDangerStyle, padding: '0.3rem 0.8rem' }}>🗑️</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            )) : <p style={{textAlign: 'center', opacity: 0.5, padding: '2rem'}}>No hay planes de evaluación registrados.</p>}
           </div>
         )}
 
       </main>
 
-      <footer style={{ textAlign: 'center', padding: '4rem', opacity: 0.3, fontSize: '0.8rem', letterSpacing: '2px' }}>
-        <p>© 2026 U.E CIUDAD CUATRICENTENARIA • 1er Grado - Sección B</p>
-        <p style={{ fontSize: '0.7rem', marginTop: '0.5rem' }}>Plataforma educativa - Todos los derechos reservados</p>
+      <footer style={{ textAlign: 'center', padding: '4rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: '#6b7280' }}>
+        U.E Ciudad Cuatricentenaria © 2026 - {GRADO} Sección {SECCION}
       </footer>
-
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        select option { background: #102d22; color: white; }
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
     </div>
   );
 };
 
-const selectStyle: React.CSSProperties = {
-  padding: '0.5rem 1rem',
-  borderRadius: '50px',
-  background: 'rgba(0, 0, 0, 0.3)',
-  color: 'white',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
+const seccionBadgeStyle: React.CSSProperties = {
+  padding: '0.6rem 1.5rem',
+  borderRadius: '10px',
+  background: COLORES.principal,
+  color: COLORES.oscuro,
   fontWeight: 'bold',
-  fontSize: '0.7rem',
-  cursor: 'pointer',
-  outline: 'none'
+  fontSize: '1rem'
 };
 
 const inputStyle: React.CSSProperties = {
-  padding: '1rem 1.2rem',
-  borderRadius: '15px',
-  border: '1px solid rgba(255, 255, 255, 0.05)',
+  padding: '1rem',
+  borderRadius: '12px',
+  border: '1px solid rgba(255,255,255,0.1)',
   background: 'rgba(0,0,0,0.2)',
   color: 'white',
-  fontSize: '0.85rem',
-  outline: 'none',
-  fontWeight: '600',
+  fontSize: '1rem',
   fontFamily: 'inherit'
 };
 
-const labelStyle: React.CSSProperties = {
-  marginTop: 0, 
-  fontSize: '0.75rem', 
-  opacity: 0.5, 
-  textTransform: 'uppercase', 
-  letterSpacing: '2px',
-  marginBottom: '1rem'
-};
-
 const formCardStyle: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.02)',
-  backdropFilter: 'blur(15px)',
+  background: 'rgba(255,255,255,0.03)',
   padding: '2rem',
   borderRadius: '30px',
-  border: '1px solid rgba(255, 255, 255, 0.08)',
-  marginBottom: '2rem',
-  boxShadow: '0 20px 50px rgba(0,0,0,0.2)'
+  border: '1px solid rgba(255,255,255,0.08)',
+  marginBottom: '2rem'
 };
 
 const itemCardStyle: React.CSSProperties = {
-  background: 'rgba(255, 255, 255, 0.03)',
-  padding: '1.5rem',
-  borderRadius: '25px',
-  border: '1px solid rgba(255, 255, 255, 0.05)',
+  background: 'rgba(255,255,255,0.02)',
+  padding: '1.5rem 2rem',
+  borderRadius: '20px',
+  border: '1px solid rgba(255,255,255,0.05)',
   marginBottom: '1rem',
   display: 'flex',
   justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: '15px',
-  flexWrap: 'wrap'
+  alignItems: 'flex-start',
+  gap: '1rem'
 };
 
 const btnPrincipalStyle: React.CSSProperties = {
   background: COLORES.principal,
   color: '#1a2e26',
   border: 'none',
-  borderRadius: '15px',
-  fontWeight: '800',
+  borderRadius: '12px',
+  fontWeight: 'bold',
   cursor: 'pointer',
   padding: '1rem',
-  fontSize: '0.75rem',
-  letterSpacing: '1px',
-  transition: 'all 0.3s ease'
+  transition: '0.3s'
 };
 
 const btnDangerStyle: React.CSSProperties = {
-  background: 'transparent',
+  background: 'rgba(220, 53, 69, 0.2)',
   color: '#ff4d4d',
-  border: '1px solid rgba(255, 77, 77, 0.3)',
-  borderRadius: '12px',
+  border: '1px solid #ff4d4d',
+  borderRadius: '10px',
   padding: '0.5rem 1rem',
-  fontSize: '0.75rem',
-  fontWeight: 'bold',
   cursor: 'pointer',
-  transition: 'all 0.3s ease'
-};
-
-const badgeStyle: React.CSSProperties = {
-  background: 'rgba(0, 187, 126, 0.2)',
-  color: COLORES.principal,
-  padding: '3px 10px',
-  borderRadius: '50px',
-  fontSize: '0.7rem',
-  fontWeight: 'bold'
-};
-
-const emptyStateStyle: React.CSSProperties = {
-  textAlign: 'center',
-  padding: '3rem',
-  opacity: 0.6,
-  background: 'rgba(255, 255, 255, 0.02)',
-  borderRadius: '30px',
-  margin: '2rem 0'
-};
-
-const infoBadge: React.CSSProperties = {
-  background: 'rgba(0, 187, 126, 0.15)',
-  padding: '0.4rem 1rem',
-  borderRadius: '50px',
-  fontSize: '0.75rem',
-  border: '1px solid rgba(0, 187, 126, 0.3)'
+  transition: '0.3s'
 };
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-  gap: '12px',
-  marginTop: '1rem'
+  gap: '15px'
 };
 
 export default ClassroomPage;

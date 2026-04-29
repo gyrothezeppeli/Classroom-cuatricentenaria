@@ -1,7 +1,11 @@
+// ==============================================
+// FILE: 4toGradoSeccionA.tsx
+// ==============================================
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const COLORES = {
   principal: '#00BB7E',
@@ -13,14 +17,14 @@ const COLORES = {
   textLight: '#f3f4f6'
 };
 
-const NIVELES_INICIAL = ['Preescolar'];
-const SECCIONES = ['A', 'B', 'C'];
+// ACTUALIZADO: 4to grado, Sección A
+const GRADO = '4to grado';
+const SECCION = 'A';
 
-const getKey = (nivel: string, seccion: string): string => `${nivel}_${seccion}`;
+const getKey = (): string => `${GRADO}_${SECCION}`;
 
 const ClassroomPage: React.FC = () => {
-  const [nivelActual, setNivelActual] = useState<string>('Preescolar');
-  const [seccionActual, setSeccionActual] = useState<string>('A');
+  const router = useRouter();
   const [seccionActiva, setSeccionActiva] = useState('tareas');
 
   const [tareas, setTareas] = useState<any[]>([]);
@@ -35,7 +39,7 @@ const ClassroomPage: React.FC = () => {
   const [nuevaGuia, setNuevaGuia] = useState({ titulo: '', descripcion: '', archivo: '' });
   const [nuevoPlan, setNuevoPlan] = useState({ periodo: '', contenido: '', fecha: '' });
 
-  const currentKey = getKey(nivelActual, seccionActual);
+  const currentKey = getKey();
 
   useEffect(() => {
     const cargarDatos = () => {
@@ -55,7 +59,7 @@ const ClassroomPage: React.FC = () => {
       setPlanEvaluacion(planStored ? JSON.parse(planStored) : []);
     };
     cargarDatos();
-  }, [nivelActual, seccionActual, currentKey]);
+  }, [currentKey]);
 
   useEffect(() => { localStorage.setItem(`tareas_${currentKey}`, JSON.stringify(tareas)); }, [tareas, currentKey]);
   useEffect(() => { localStorage.setItem(`avisos_${currentKey}`, JSON.stringify(avisos)); }, [avisos, currentKey]);
@@ -110,24 +114,43 @@ const ClassroomPage: React.FC = () => {
     <div style={{ fontFamily: "'Montserrat', sans-serif", background: COLORES.deepBg, minHeight: '100vh', color: 'white' }}>
       
       <nav style={{ background: COLORES.darkBanner, padding: '1.5rem 5%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${COLORES.sandBorder}` }}>
-        <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.2rem' }}>
-          U.E Ciudad Cuatricentenaria
-        </Link>
-        <div style={{ display: 'flex', gap: '15px' }}>
-          <select value={nivelActual} onChange={(e) => setNivelActual(e.target.value)} style={selectStyle}>
-            {NIVELES_INICIAL.map(n => <option key={n} value={n}>{n}</option>)}
-          </select>
-          <select value={seccionActual} onChange={(e) => setSeccionActual(e.target.value)} style={selectStyle}>
-            {SECCIONES.map(s => <option key={s} value={s}>Sección {s}</option>)}
-          </select>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <button 
+            onClick={() => router.push('/')}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: `1px solid ${COLORES.sandBorder}`,
+              borderRadius: '10px',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              transition: '0.3s',
+              backdropFilter: 'blur(10px)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+          >
+            ← Regresar al Inicio
+          </button>
+          <Link href="/" style={{ color: 'white', fontWeight: 'bold', textDecoration: 'none', fontSize: '1.2rem' }}>
+            U.E Ciudad Cuatricentenaria
+          </Link>
+        </div>
+        <div style={seccionBadgeStyle}>
+          {GRADO} - Sección {SECCION}
         </div>
       </nav>
 
       <header style={{ padding: '4rem 10% 2rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
         <h1 style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '-2px', margin: 0, textTransform: 'uppercase' }}>
-          {nivelActual}
+          {GRADO}
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {seccionActual} - Educación Inicial</p>
+        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Primaria</p>
       </header>
 
       <section style={{ padding: '0 10%', marginBottom: '3rem' }}>
@@ -280,21 +303,19 @@ const ClassroomPage: React.FC = () => {
       </main>
 
       <footer style={{ textAlign: 'center', padding: '4rem', borderTop: '1px solid rgba(255,255,255,0.05)', color: '#6b7280' }}>
-        U.E Ciudad Cuatricentenaria © 2026
+        U.E Ciudad Cuatricentenaria © 2026 - {GRADO} Sección {SECCION}
       </footer>
     </div>
   );
 };
 
-const selectStyle: React.CSSProperties = {
-  padding: '0.6rem 1rem',
+const seccionBadgeStyle: React.CSSProperties = {
+  padding: '0.6rem 1.5rem',
   borderRadius: '10px',
-  background: '#102d22',
-  color: 'white',
-  border: '1px solid #5c7564',
+  background: COLORES.principal,
+  color: COLORES.oscuro,
   fontWeight: 'bold',
-  cursor: 'pointer',
-  appearance: 'none'
+  fontSize: '1rem'
 };
 
 const inputStyle: React.CSSProperties = {
