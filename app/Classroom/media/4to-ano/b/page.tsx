@@ -14,13 +14,13 @@ const COLORES = {
   textLight: '#f3f4f6'
 };
 
-// ACTUALIZADO: 4to grado, Sección B
-const GRADO = '4to grado';
+// Fijo: 4to año, Sección B
+const GRADO = '4to año';
 const SECCION = 'B';
 
 const getKey = (): string => `${GRADO}_${SECCION}`;
 
-export default function Page() {
+const ClassroomPage: React.FC = () => {
   const router = useRouter();
   const [seccionActiva, setSeccionActiva] = useState('tareas');
 
@@ -147,7 +147,7 @@ export default function Page() {
         <h1 style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '-2px', margin: 0, textTransform: 'uppercase' }}>
           {GRADO}
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Primaria</p>
+        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Media General</p>
       </header>
 
       <section style={{ padding: '0 10%', marginBottom: '3rem' }}>
@@ -304,7 +304,7 @@ export default function Page() {
       </footer>
     </div>
   );
-}
+};
 
 const seccionBadgeStyle: React.CSSProperties = {
   padding: '0.6rem 1.5rem',
@@ -371,3 +371,5 @@ const gridStyle: React.CSSProperties = {
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
   gap: '15px'
 };
+
+export default ClassroomPage;
