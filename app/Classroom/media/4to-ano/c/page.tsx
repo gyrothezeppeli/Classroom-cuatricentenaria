@@ -1,6 +1,3 @@
-// ==============================================
-// FILE: 4toGradoSeccionC.tsx
-// ==============================================
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -17,8 +14,8 @@ const COLORES = {
   textLight: '#f3f4f6'
 };
 
-// ACTUALIZADO: 4to grado, Sección C
-const GRADO = '4to grado';
+// Fijo: 4to año, Sección C
+const GRADO = '4to año';
 const SECCION = 'C';
 
 const getKey = (): string => `${GRADO}_${SECCION}`;
@@ -150,7 +147,7 @@ const ClassroomPage: React.FC = () => {
         <h1 style={{ fontSize: '3.5rem', fontWeight: '900', letterSpacing: '-2px', margin: 0, textTransform: 'uppercase' }}>
           {GRADO}
         </h1>
-        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Primaria</p>
+        <p style={{ fontSize: '1.2rem', color: '#9ca3af' }}>Sección {SECCION} - Educación Media General</p>
       </header>
 
       <section style={{ padding: '0 10%', marginBottom: '3rem' }}>
