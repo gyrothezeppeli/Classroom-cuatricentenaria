@@ -1,13 +1,13 @@
-// app/layout.tsx
 import type { Metadata } from 'next';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './globals.css';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'U.E Ciudad Cuatricentenaria - Start Bootstrap Theme',
   description: 'Proyectos de Informática y Desarrollo',
   verification: {
-    google: 'S-7BKj-vL3gmteCfBMSyYelNygsiPftZELDXZbDeI3Y', // <-- Agrega esta línea
+    google: 'S-7BKj-vL3gmteCfBMSyYelNygsiPftZELDXZbDeI3Y',
   },
 };
 
@@ -30,7 +30,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

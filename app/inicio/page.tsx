@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const COLORES = {
   principal: '#00BB7E',
@@ -11,26 +12,77 @@ const COLORES = {
 };
 
 const TeacherAuthPage: React.FC = () => {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
-    password: '',
-    codigoDocente: ''
+    password: ''
   });
 
-  const CODIGO_VALIDO = "1234";
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLogin) {
-      if (formData.codigoDocente !== CODIGO_VALIDO) {
-        alert("El Código de Docente es incorrecto. Contacte a la dirección.");
-        return;
+    setLoading(true);
+
+    try {
+      if (!isLogin) {
+        // REGISTRO - Sin código docente
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nombre: formData.nombre,
+            email: formData.email,
+            password: formData.password
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
+          // Limpiar formulario y cambiar a login
+          setIsLogin(true);
+          setFormData({ nombre: '', email: '', password: '' });
+        } else {
+          alert(data.error || "Error al registrar. Intente nuevamente.");
+        }
+      } else {
+        // LOGIN
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Guardar token y datos del usuario
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          
+          alert(`¡Bienvenido ${data.user.nombre}!`);
+          // Redirigir al dashboard
+          router.push('/teacher/dashboard');
+          router.refresh();
+        } else {
+          alert(data.error || "Error al iniciar sesión. Verifica tus credenciales.");
+        }
       }
-      alert("Cuenta creada con éxito (Modo Prueba)");
-    } else {
-      console.log("Iniciando sesión con:", formData.email);
+    } catch (error) {
+      console.error('Error:', error);
+      alert("Error de conexión. Verifica que el servidor esté funcionando.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -70,12 +122,14 @@ const TeacherAuthPage: React.FC = () => {
             <button 
               onClick={() => setIsLogin(true)}
               style={{ ...tabButtonStyle, background: isLogin ? COLORES.principal : 'transparent', color: isLogin ? '#1a2e26' : 'white' }}
+              disabled={loading}
             >
               INGRESAR
             </button>
             <button 
               onClick={() => setIsLogin(false)}
               style={{ ...tabButtonStyle, background: !isLogin ? COLORES.principal : 'transparent', color: !isLogin ? '#1a2e26' : 'white' }}
+              disabled={loading}
             >
               REGISTRARSE
             </button>
@@ -92,8 +146,10 @@ const TeacherAuthPage: React.FC = () => {
                   type="text" 
                   placeholder="Ej. Prof. García" 
                   style={inputStyle} 
+                  value={formData.nombre}
                   onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                   required
+                  disabled={loading}
                 />
               </div>
             )}
@@ -104,8 +160,10 @@ const TeacherAuthPage: React.FC = () => {
                 type="email" 
                 placeholder="usuario@colegio.com" 
                 style={inputStyle} 
+                value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -115,26 +173,19 @@ const TeacherAuthPage: React.FC = () => {
                 type="password" 
                 placeholder="••••••••" 
                 style={inputStyle} 
+                value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 required
+                disabled={loading}
               />
             </div>
 
-            {!isLogin && (
-              <div style={{ textAlign: 'left' }}>
-                <label style={{...labelStyle, color: '#ffcc00'}}>Código Docente (Requerido)</label>
-                <input 
-                  type="text" 
-                  placeholder="Ingrese el código de seguridad" 
-                  style={{...inputStyle, border: '1px solid #ffcc00'}} 
-                  onChange={(e) => setFormData({...formData, codigoDocente: e.target.value})}
-                  required
-                />
-              </div>
-            )}
-
-            <button type="submit" style={btnSubmitStyle}>
-              {isLogin ? 'ACCEDER AL PANEL' : 'FINALIZAR REGISTRO'}
+            <button 
+              type="submit" 
+              style={btnSubmitStyle}
+              disabled={loading}
+            >
+              {loading ? 'PROCESANDO...' : (isLogin ? 'ACCEDER AL PANEL' : 'FINALIZAR REGISTRO')}
             </button>
           </form>
 
